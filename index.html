@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自媒体选题评价助手</title>
+  <style>
+    /* ===== CSS 变量（淡紫色主题） ===== */
+    :root {
+      --primary: #7c5cbf;
+      --primary-dark: #5a3d96;
+      --primary-light: #e8dff5;
+      --bg: #f8f5ff;
+      --card: #ffffff;
+      --border: #d4c8e8;
+      --text: #1a1a2e;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --redline: #b91c1c;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ===== 布局 ===== */
+    .page-header { text-align: center; padding: 40px 24px 20px; }
+    .page-title { font-size: 28px; font-weight: 700; color: var(--primary-dark); }
+    .page-subtitle { font-size: 15px; color: var(--text-secondary); margin-top: 6px; }
+    .main-container { max-width: 760px; margin: 0 auto; padding: 0 24px 48px; }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+    .section-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+
+    /* ===== API Key ===== */
+    .api-setup { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .api-input-group { flex: 1; min-width: 220px; }
+    .api-input-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 4px; color: var(--text-secondary); }
+    .api-input-row { display: flex; gap: 8px; }
+    .api-input-row input {
+      flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; outline: none; transition: border 0.2s;
+    }
+    .api-input-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .api-status { font-size: 12px; margin-top: 4px; }
+    .api-status.set { color: var(--success); }
+    .api-status.unset { color: var(--danger); }
+
+    /* ===== 选题输入 ===== */
+    .topic-textarea {
+      width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 15px; font-family: inherit; resize: vertical; outline: none;
+      transition: border 0.2s; line-height: 1.6;
+    }
+    .topic-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .char-count { font-size: 13px; color: var(--text-muted); }
+
+    /* ===== 按钮 ===== */
+    .btn {
+      padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-size: 15px;
+      font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-secondary:hover:not(:disabled) { background: var(--primary-light); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover:not(:disabled) { background: #f3f4f6; }
+    .btn-danger { color: var(--danger); }
+    .btn-danger:hover:not(:disabled) { background: #fef2f2; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-evaluate {
+      padding: 12px 28px; font-size: 16px; font-weight: 600;
+      background: var(--primary); color: #fff; border-radius: var(--radius-sm);
+      border: none; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .btn-evaluate:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+    /* ===== 加载状态 - 步骤动画 ===== */
+    .loading-section {
+      display: none; padding: 32px 24px; background: var(--card);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      margin-bottom: 20px; box-shadow: var(--shadow-sm);
+    }
+    .loading-section.active { display: block; }
+    .loading-steps { display: flex; flex-direction: column; gap: 14px; }
+    .loading-step {
+      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+      border-radius: var(--radius-md); font-size: 15px; color: var(--text-muted);
+      transition: all 0.4s ease;
+    }
+    .loading-step .step-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .loading-step.waiting { color: var(--text-muted); }
+    .loading-step.waiting .step-icon { background: #f3f4f6; }
+    .loading-step.active-step { color: var(--primary-dark); font-weight: 600; background: var(--primary-light); }
+    .loading-step.active-step .step-icon { background: var(--primary); color: #fff; animation: pulse-step 1.2s ease-in-out infinite; }
+    .loading-step.done { color: var(--success); }
+    .loading-step.done .step-icon { background: #dcfce7; }
+    @keyframes pulse-step { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    .loading-spinner { margin: 20px auto 0; width: 36px; height: 36px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== 错误提示 ===== */
+    .error-section {
+      display: none; padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: var(--radius-md); color: var(--danger); margin-bottom: 20px; font-size: 14px;
+    }
+    .error-section.active { display: block; }
+
+    /* ===== 结果展示区 ===== */
+    .result-section { display: none; }
+    .result-section.active { display: block; }
+
+    /* 总分开头 */
+    .result-hero {
+      text-align: center; padding: 32px 24px; border-radius: var(--radius-md); margin-bottom: 24px;
+      transition: background 0.3s;
+    }
+    .result-hero.excellent, .result-hero.good { background: #f0fdf4; }
+    .result-hero.moderate { background: #fffbeb; }
+    .result-hero.warning { background: #fff7ed; }
+    .result-hero.bad { background: #fef2f2; }
+    .result-hero.redline { background: #fecaca; }
+    .result-big-number { font-size: 72px; font-weight: 800; line-height: 1; }
+    .result-unit { font-size: 24px; font-weight: 600; color: var(--text-secondary); }
+    .result-grade { font-size: 22px; font-weight: 600; margin-top: 6px; }
+    .result-suggestion { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+    .redline-warning { font-size: 18px; font-weight: 700; color: var(--redline); margin-top: 8px; display: none; }
+
+    /* ===== AI 理解 + 背景分析 ===== */
+    .analysis-block {
+      padding: 18px 20px; border-radius: var(--radius-md); margin-bottom: 16px;
+      border-left: 4px solid var(--primary); background: #faf8ff;
+    }
+    .analysis-block.bg-context { border-left-color: #3b82f6; background: #f8faff; }
+    .analysis-block h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--primary-dark); }
+    .analysis-block.bg-context h4 { color: #1e40af; }
+    .analysis-block p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+    /* ===== 维度结果 ===== */
+    .section-divider { font-size: 16px; font-weight: 600; margin: 24px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--primary-light); }
+    .dimension-results { display: flex; flex-direction: column; gap: 14px; }
+    .dim-result { padding: 16px 18px; background: #fafafa; border-radius: var(--radius-md); border-left: 4px solid var(--border); transition: all 0.2s; }
+    .dim-result:hover { background: #f5f5f5; }
+    .dim-result.emotion    { border-left-color: #ef4444; }
+    .dim-result.curiosity  { border-left-color: #8b5cf6; }
+    .dim-result.cognition  { border-left-color: #3b82f6; }
+    .dim-result.resonance  { border-left-color: #06b6d4; }
+    .dim-result.complexity { border-left-color: #f59e0b; }
+    .dim-result.visual     { border-left-color: #ec4899; }
+    .dim-result.algorithm  { border-left-color: #10b981; }
+    .dim-result.trend      { border-left-color: #6366f1; }
+    .dim-result.audience   { border-left-color: #14b8a6; }
+    .dim-result.cost       { border-left-color: #9ca3af; }
+    .dim-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .dim-result-name { font-weight: 600; font-size: 15px; }
+    .dim-result-score-wrap { display: flex; align-items: baseline; gap: 4px; }
+    .dim-result-score { font-weight: 700; font-size: 22px; }
+    .dim-result-max { font-size: 13px; color: var(--text-muted); }
+    .dim-result-bar-wrap { height: 6px; background: #e5e7eb; border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
+    .dim-result-bar { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .dim-result-reason { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .dim-result-reason strong { color: var(--text); }
+
+    /* 总分计算过程 */
+    .calc-breakdown { margin-top: 20px; padding: 16px 18px; background: #fffbeb; border-radius: var(--radius-md); font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+    .calc-breakdown strong { color: var(--text); }
+    .calc-breakdown .formula { font-family: monospace; font-size: 13px; display: block; margin: 4px 0; color: var(--text); }
+
+    /* ===== 操作按钮 ===== */
+    .result-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+    .action-section { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .action-section .btn { flex: 1; min-width: 100px; }
+
+    /* ===== 历史记录 ===== */
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-empty { text-align: center; color: var(--text-muted); padding: 24px; font-size: 15px; }
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .history-item:hover { background: var(--primary-light); border-color: var(--primary); }
+    .history-item-left { flex: 1; min-width: 0; }
+    .history-item-topic { font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-item-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .history-item-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; margin-left: 12px; }
+    .history-item-score { font-weight: 700; font-size: 20px; }
+    .history-item-delete {
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent;
+      color: var(--text-muted); cursor: pointer; font-size: 16px; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .history-item-delete:hover { background: #fef2f2; color: var(--danger); }
+
+    /* ===== 页脚 ===== */
+    .page-footer { text-align: center; padding: 0 24px 32px; color: var(--text-muted); font-size: 13px; }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 640px) {
+      .page-title { font-size: 22px; }
+      .main-container { padding: 0 16px 32px; }
+      .card { padding: 16px; }
+      .result-big-number { font-size: 52px; }
+      .action-section .btn { flex: 1 1 100%; }
+      .api-setup { flex-direction: column; }
+      .history-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .history-item-right { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <h1 class="page-title">🎯 自媒体选题评价助手</h1>
+    <p class="page-subtitle">粘贴选题 → AI 自动理解分析 → 8 维度打分 → 告诉你值不值得做</p>
+  </header>
+
+  <main class="main-container">
+
+    <!-- ===== API Key 设置 ===== -->
+    <section class="card" id="api-section">
+      <h2 class="section-title">🔑 DeepSeek API 设置</h2>
+      <p class="section-hint">需要 API Key（<a href="https://platform.deepseek.com/" target="_blank" style="color:var(--primary);">免费注册获取</a>），Key 只存在你的浏览器里</p>
+      <div class="api-setup">
+        <div class="api-input-group">
+          <label for="api-key-input">API Key</label>
+          <div class="api-input-row">
+            <input type="password" id="api-key-input" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-key">👁</button>
+          </div>
+          <p class="api-status unset" id="api-status">⚠ 尚未设置 API Key</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-save-key">💾 保存</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-key">清除</button>
+      </div>
+    </section>
+
+    <!-- ===== 选题输入 ===== -->
+    <section class="card">
+      <h2 class="section-title">📝 输入选题</h2>
+      <textarea class="topic-textarea" id="topic-input" rows="5"
+        placeholder="粘贴你想评估的选题，越详细越好。比如：&#10;「最近很多年轻人开始抵制网红餐厅，转而打卡社区里的老年食堂。我想做一期视频，探访 5 家上海的社区老年食堂，对比价格、口味和氛围，讨论消费降级时代的生活方式变化」"
+        maxlength="1000"></textarea>
+      <div class="input-footer">
+        <span class="char-count" id="char-count">0 / 1000</span>
+        <button type="button" class="btn-evaluate" id="btn-evaluate" disabled>🤖 AI 自动评分</button>
+      </div>
+    </section>
+
+    <!-- ===== 错误提示 ===== -->
+    <div class="error-section" id="error-section"><span id="error-message"></span></div>
+
+    <!-- ===== 加载状态 —— 4 步过程展示 ===== -->
+    <div class="loading-section" id="loading-section">
+      <div class="loading-steps">
+        <div class="loading-step" id="step-1"><span class="step-icon">1</span> 🔍 理解选题核心——AI 正在解读你的选题在说什么、面向谁、属于什么赛道</div>
+        <div class="loading-step" id="step-2"><span class="step-icon">2</span> 🧠 激活背景知识——AI 正在调用对该领域的认知：受众画像、相关热点、平台规律</div>
+        <div class="loading-step" id="step-3"><span class="step-icon">3</span> 📊 逐维度评分——从 8 个维度分别评估，每个维度给出详细理由</div>
+        <div class="loading-step" id="step-4"><span class="step-icon">4</span> 📝 生成分析报告——计算综合得分，整理评估结论</div>
+      </div>
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- ===== 评分结果 ===== -->
+    <section class="card result-section" id="result-section">
+      <!-- 总分 -->
+      <div class="result-hero" id="result-hero">
+        <div><span class="result-big-number" id="result-score">--</span><span class="result-unit">分</span></div>
+        <div class="result-grade" id="result-grade"></div>
+        <p class="result-suggestion" id="result-suggestion"></p>
+        <p class="redline-warning" id="redline-warning">⚠️ 选题涉及法律红线，建议立即放弃！</p>
+      </div>
+
+      <!-- AI 对选题的理解 -->
+      <div class="analysis-block" id="topic-understanding-block">
+        <h4>🔍 AI 对选题的理解</h4>
+        <p id="topic-understanding-text"></p>
+      </div>
+
+      <!-- 背景分析 -->
+      <div class="analysis-block bg-context" id="background-context-block">
+        <h4>🧠 背景信息分析</h4>
+        <p id="background-context-text"></p>
+      </div>
+
+      <!-- 各维度评分 -->
+      <div class="section-divider">📋 8 维度评分详情</div>
+      <div class="dimension-results" id="dimension-results"></div>
+
+      <!-- 计算过程 -->
+      <div class="calc-breakdown" id="calc-breakdown"></div>
+
+      <!-- 操作 -->
+      <div class="result-actions">
+        <button type="button" class="btn btn-primary" id="btn-save-result">💾 保存到历史</button>
+        <button type="button" class="btn btn-ghost" id="btn-new-eval">🔄 评下一个</button>
+      </div>
+    </section>
+
+    <!-- ===== 操作按钮 ===== -->
+    <section class="action-section">
+      <button type="button" class="btn btn-secondary" id="btn-export">📥 导出备份</button>
+      <button type="button" class="btn btn-ghost btn-danger" id="btn-clear-all">🗑 清空历史</button>
+    </section>
+
+    <!-- ===== 评价历史 ===== -->
+    <section class="card">
+      <h2 class="section-title">📊 评价历史</h2>
+      <div class="history-list" id="history-list">
+        <p class="history-empty" id="history-empty">还没有评价记录，去评一个选题吧 ✨</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="page-footer">
+    <p>所有数据仅存储在本地浏览器 · API Key 和评价历史不会上传到任何服务器</p>
+  </footer>
+
+  <script>
+  (function() {
+    'use strict';
+
+    const $ = (sel) => document.querySelector(sel);
+
+    // ===== DOM 引用 =====
+    const apiKeyInput = $('#api-key-input');
+    const apiStatus = $('#api-status');
+    const topicInput = $('#topic-input');
+    const charCount = $('#char-count');
+    const btnEvaluate = $('#btn-evaluate');
+    const loadingSection = $('#loading-section');
+    const errorSection = $('#error-section');
+    const errorMessage = $('#error-message');
+    const resultSection = $('#result-section');
+    const resultHero = $('#result-hero');
+    const resultScore = $('#result-score');
+    const resultGrade = $('#result-grade');
+    const resultSuggestion = $('#result-suggestion');
+    const redlineWarning = $('#redline-warning');
+    const topicUnderstandingText = $('#topic-understanding-text');
+    const backgroundContextText = $('#background-context-text');
+    const dimensionResults = $('#dimension-results');
+    const calcBreakdown = $('#calc-breakdown');
+    const historyList = $('#history-list');
+    const historyEmpty = $('#history-empty');
+
+    // ===== 常量 =====
+    const DEEPSEEK_API = 'https://api.deepseek.com/v1/chat/completions';
+    const DIMENSIONS = [
+      { key:'emotion',   name:'🔥 情绪的浓烈程度', weight:30, cssClass:'emotion',   desc:'愤怒/不公/恐惧/猎奇/喜悦——越强烈越高分' },
+      { key:'curiosity', name:'🌀 猎奇程度',       weight:16, cssClass:'curiosity', desc:'颠覆常识/突破底线/反差荒诞——越出人意料越高分' },
+      { key:'cognition', name:'🧠 默认认知程度',    weight:12, cssClass:'cognition', desc:'一知半解=最高分；熟知/一无所知=较低分' },
+      { key:'resonance', name:'🌐 共鸣广度',       weight:10, cssClass:'resonance', desc:'个人→家庭→社会→国家→世界' },
+      { key:'complexity',name:'🧩 内容晦涩程度',    weight:10, cssClass:'complexity',desc:'故事越简单、行文越轻松=越高分；逻辑层叠+理科知识=越低分' },
+      { key:'visual',    name:'📸 可视化潜力',     weight:8,  cssClass:'visual',    desc:'选题是否容易拍出好看/有趣的画面？画面感越强越高分' },
+      { key:'algorithm', name:'🤖 平台算法友好度',  weight:5,  cssClass:'algorithm', desc:'完播率/互动率/分享率的预期如何' },
+      { key:'trend',     name:'📡 流行热点关联度',  weight:5,  cssClass:'trend',     desc:'是否关联当下热点话题或流行趋势' },
+      { key:'audience',  name:'👥 受众规模',       weight:4,  cssClass:'audience',  desc:'感兴趣人群的广度——全民向还是小众' },
+      { key:'cost',      name:'💰 制作成本（参考）',weight:0,  cssClass:'cost',      desc:'分数越高=成本越低，不计入总分' }
+    ];
+
+    // ===== API Key 管理 =====
+    function getApiKey() { return localStorage.getItem('deepseek-api-key') || ''; }
+    function saveApiKey(key) { localStorage.setItem('deepseek-api-key', key.trim()); }
+    function clearApiKey() { localStorage.removeItem('deepseek-api-key'); }
+    function updateApiUI() {
+      const key = getApiKey();
+      if (key) {
+        apiKeyInput.value = key;
+        apiStatus.textContent = '✅ API Key 已设置';
+        apiStatus.className = 'api-status set';
+        btnEvaluate.disabled = false;
+      } else {
+        apiKeyInput.value = '';
+        apiStatus.textContent = '⚠ 尚未设置 API Key（免费注册: platform.deepseek.com）';
+        apiStatus.className = 'api-status unset';
+        btnEvaluate.disabled = true;
+      }
+    }
+
+    // ===== 错误/加载 =====
+    function showError(msg) { errorMessage.textContent = msg; errorSection.classList.add('active'); loadingSection.classList.remove('active'); }
+    function hideError() { errorSection.classList.remove('active'); }
+
+    // ===== 加载步骤动画 =====
+    function startLoadingAnimation() {
+      loadingSection.classList.add('active');
+      resultSection.classList.remove('active');
+      hideError();
+      // 重置所有步骤
+      ['step-1','step-2','step-3','step-4'].forEach(id => {
+        const el = $('#' + id);
+        el.className = 'loading-step waiting';
+        el.querySelector('.step-icon').textContent = '○';
+      });
+    }
+
+    function advanceStep(stepNum) {
+      // 之前的步骤标为完成
+      for (let i = 1; i < stepNum; i++) {
+        const el = $('#step-' + i);
+        el.className = 'loading-step done';
+        el.querySelector('.step-icon').textContent = '✓';
+      }
+      // 当前步骤标为进行中
+      const cur = $('#step-' + stepNum);
+      if (cur) {
+        cur.className = 'loading-step active-step';
+        cur.querySelector('.step-icon').textContent = stepNum;
+      }
+    }
+
+    function finishAllSteps() {
+      ['step-1','step-2','step-3','step-4'].forEach(id => {
+        const el = $('#' + id);
+        el.className = 'loading-step done';
+        el.querySelector('.step-icon').textContent = '✓';
+      });
+    }
+
+    function hideLoading() { loadingSection.classList.remove('active'); }
+
+    // ===== 计算 =====
+    function calculateTotal(scores) {
+      let total = 0;
+      for (const dim of DIMENSIONS) {
+        if (dim.weight > 0 && scores[dim.key] && typeof scores[dim.key].score === 'number') {
+          total += scores[dim.key].score * dim.weight / 100;
+        }
+      }
+      return Math.round(total);
+    }
+
+    function getGrade(totalScore, redLineViolation) {
+      if (redLineViolation) return { grade:'🚫 一票否决', suggestion:'选题涉及法律红线，建议立即放弃！', cssClass:'redline', color:'#b91c1c' };
+      if (totalScore >= 85) return { grade:'⭐⭐⭐⭐⭐ 强烈推荐', suggestion:'全力以赴，优先制作！', cssClass:'excellent', color:'#22c55e' };
+      if (totalScore >= 70) return { grade:'⭐⭐⭐⭐ 值得做', suggestion:'投入时间，准备制作', cssClass:'good', color:'#16a34a' };
+      if (totalScore >= 55) return { grade:'⭐⭐⭐ 斟酌', suggestion:'有一定亮点但存在明显短板，建议优化后再评估', cssClass:'moderate', color:'#f59e0b' };
+      if (totalScore >= 40) return { grade:'⭐⭐ 不太推荐', suggestion:'暂缓，除非有特别理由', cssClass:'warning', color:'#f97316' };
+      return { grade:'⭐ 不推荐', suggestion:'建议换选题，不浪费时间', cssClass:'bad', color:'#ef4444' };
+    }
+
+    // ===== 结果渲染 =====
+    function renderResult(data, topic) {
+      const scores = data.scores;
+      const redLine = data.redLineViolation === true;
+      const totalScore = redLine ? 0 : calculateTotal(scores);
+      const gradeInfo = getGrade(totalScore, redLine);
+
+      finishAllSteps();
+      setTimeout(() => {
+        hideLoading();
+
+        // 总分
+        resultScore.textContent = totalScore;
+        resultScore.style.color = gradeInfo.color;
+        resultGrade.textContent = gradeInfo.grade;
+        resultSuggestion.textContent = gradeInfo.suggestion;
+        redlineWarning.style.display = redLine ? 'block' : 'none';
+        resultHero.className = 'result-hero ' + gradeInfo.cssClass;
+
+        // AI 对选题的理解
+        if (data.topicUnderstanding) {
+          topicUnderstandingText.textContent = data.topicUnderstanding;
+          $('#topic-understanding-block').style.display = 'block';
+        } else {
+          $('#topic-understanding-block').style.display = 'none';
+        }
+
+        // 背景信息分析
+        if (data.backgroundContext) {
+          backgroundContextText.textContent = data.backgroundContext;
+          $('#background-context-block').style.display = 'block';
+        } else {
+          $('#background-context-block').style.display = 'none';
+        }
+
+        // 维度详情
+        dimensionResults.innerHTML = '';
+        for (const dim of DIMENSIONS) {
+          const dimData = scores[dim.key];
+          if (!dimData) continue;
+          const score = dimData.score || 0;
+          const reason = dimData.reason || '—';
+          const barColor = dim.weight > 0 ? gradeInfo.color : '#9ca3af';
+          const weightLabel = dim.weight > 0 ? `权重 ${dim.weight}%` : '不计分';
+
+          const div = document.createElement('div');
+          div.className = 'dim-result ' + dim.cssClass;
+          div.innerHTML = `
+            <div class="dim-result-header">
+              <span class="dim-result-name">${dim.name} <span style="font-weight:400;font-size:12px;color:var(--text-muted);">${weightLabel} · ${dim.desc}</span></span>
+              <span class="dim-result-score-wrap">
+                <span class="dim-result-score" style="color:${barColor}">${score}</span>
+                <span class="dim-result-max">/100</span>
+              </span>
+            </div>
+            <div class="dim-result-bar-wrap">
+              <div class="dim-result-bar" style="width:${score}%; background:${barColor};"></div>
+            </div>
+            <div class="dim-result-reason"><strong>评分理由：</strong>${reason}</div>
+          `;
+          dimensionResults.appendChild(div);
+        }
+
+        // 计算过程
+        let calcHtml = '<strong>📐 综合得分计算过程：</strong>';
+        calcHtml += '<span class="formula">';
+        const parts = [];
+        for (const dim of DIMENSIONS) {
+          if (dim.weight > 0) {
+            const dimData = scores[dim.key];
+            const s = dimData && typeof dimData.score === 'number' ? dimData.score : 0;
+            parts.push(`(${s} × ${dim.weight}%)`);
+          }
+        }
+        calcHtml += parts.join(' + ');
+        calcHtml += ' = <strong>' + totalScore + ' 分</strong></span>';
+        calcHtml += '<span style="font-size:12px;color:var(--text-muted);">（各维度分数 × 权重 之和，制作成本不参与计算）</span>';
+        calcBreakdown.innerHTML = calcHtml;
+
+        // 总评
+        if (data.overallComment) {
+          const commentDiv = document.createElement('div');
+          commentDiv.style.cssText = 'margin-top:18px;padding:14px 18px;background:#f0f9ff;border-radius:8px;font-size:14px;color:#1e40af;line-height:1.6;';
+          commentDiv.innerHTML = '<strong>📝 总体评价：</strong>' + data.overallComment;
+          dimensionResults.appendChild(commentDiv);
+        }
+
+        resultSection.classList.add('active');
+        resultSection._currentData = { topic, scores, topicUnderstanding: data.topicUnderstanding, backgroundContext: data.backgroundContext, redLineViolation: redLine, totalScore, createdAt: new Date().toISOString() };
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 600);
+    }
+
+    // ===== DeepSeek API 调用 =====
+    async function evaluateTopic(topic) {
+      const apiKey = getApiKey();
+      if (!apiKey) { showError('请先设置 DeepSeek API Key'); return; }
+
+      startLoadingAnimation();
+      advanceStep(1);
+
+      const systemPrompt = `你是一个资深的自媒体选题评估专家，拥有丰富的短视频/图文内容创作经验。用户会给你一个选题描述，你需要像一位专业的内容策略师一样，先深度理解这个选题，再逐维度评估。
+
+请按以下步骤完成评估：
+
+**第1步：理解选题**
+仔细分析用户给的信息：这个选题在说什么？目标受众是谁？属于什么内容赛道（如生活方式/社会评论/知识科普/美食/旅行等）？
+
+**第2步：激活背景知识**
+基于你对自媒体生态、受众心理、平台算法的了解，分析这个选题所在的赛道特点、受众的典型需求、当前该赛道的竞争态势。
+
+**第3步：逐维度评分**
+根据以下8个评分维度给分（0-100），每个维度的理由写2-3句话，要有具体的分析，不能泛泛而谈。
+
+评分维度：
+1. 情绪的浓烈程度（30%）：选题能否激起愤怒/不公/恐惧/猎奇/喜悦等高唤醒情绪？心理学研究表明高唤醒情绪是内容传播的第一驱动力。结合选题的具体内容分析它能触发哪些情绪、强度如何。
+2. 猎奇程度（16%）：是否颠覆常识/突破底线/反差荒诞/涉及未知领域？社交货币理论指出人们分享内容的根本动机之一是显得自己"知情"。结合选题分析其新颖性。
+3. 默认认知程度（12%）：大众对这个话题的认知状态。一知半解（知道一点但不深入）=最高分90-100；有所了解=60-89；一无所知=30-59；非常熟知=0-29。分析选题的"好奇心缺口"有多大。
+4. 共鸣广度（10%）：涉及范围从个人→家庭→社会→国家→世界。分析多少人会觉得"这跟我有关"。
+5. 内容晦涩程度（10%）：故事和行文是否简单易懂？故事越简单直白、讲述门槛越低=越高分；反之，涉及复杂逻辑链条、多层反转、高中以上理科知识的=越低分。认知流畅性理论表明，信息越容易理解，越容易被接受和传播。
+6. 可视化潜力（8%）：这个选题是否容易拍出好看/有趣/有冲击力的画面？画面感越强越高分。纯抽象讨论（如宏观经济、哲学）可视化潜力低；场景丰富、对比强烈的选题可视化潜力高。
+7. 平台算法友好度（5%）：高完播率预期？高互动（评论/点赞/弹幕）预期？高分享/收藏预期？分析内容形式和话题类型是否利于算法推荐。特别注意：如果选题涉及UFO、外星人、未解之谜等超自然话题，默认给低分（平台算法对此类内容限流严重），除非是官方证实的重大事件（如人类与外星文明正式接触、世界著名UFO之谜被官方解密等）。
+8. 流行热点关联度（5%）：是否关联当前社会热点、流行趋势或季节话题？分析时效性。
+9. 受众规模（4%）：感兴趣的人群有多大？全民向/大众向/圈层向/小众向？分析潜在受众体量。
+10. 制作成本（不计分）：制作这期内容需要多少时间/金钱/精力？分数越高=成本越低。
+
+**第4步：法律红线判断**
+判断是否涉及国家法律法规明确禁止的内容。大多数正常选题都不会涉及，请如实判断。
+
+**重要：请以JSON格式返回，不要加代码块标记。JSON结构如下：**
+{
+  "topicUnderstanding": "2-3句话描述你对这个选题的理解：它在说什么、面向谁、属于什么赛道",
+  "backgroundContext": "2-3句话分析这个选题所在的领域背景：受众特点、赛道竞争、平台上的表现规律",
+  "scores": {
+    "emotion": {"score": 85, "reason": "2-3句话具体分析，结合选题内容说明评分依据"},
+    "curiosity": {"score": 70, "reason": "2-3句话具体分析"},
+    "cognition": {"score": 90, "reason": "2-3句话具体分析"},
+    "resonance": {"score": 65, "reason": "2-3句话具体分析"},
+    "complexity": {"score": 80, "reason": "故事是否简单易懂？有没有复杂逻辑或硬核知识门槛？"},
+    "visual": {"score": 75, "reason": "选题是否容易拍出好看/有趣的画面？"},
+    "algorithm": {"score": 60, "reason": "2-3句话具体分析"},
+    "trend": {"score": 50, "reason": "2-3句话具体分析"},
+    "audience": {"score": 55, "reason": "2-3句话具体分析"},
+    "cost": {"score": 40, "reason": "2-3句话具体分析"}
+  },
+  "redLineViolation": false,
+  "overallComment": "2-3句话总结这个选题的核心优势和主要风险"
+}
+
+请务必确保：
+- 每个维度的评分理由具体、有针对性，不要用套话
+- 分数要拉开差距，不要全部70-80分
+- 红线判断要准确（正常选题基本都是false）`;
+
+      // 步骤动画定时器
+      const stepTimers = [
+        setTimeout(() => advanceStep(2), 800),
+        setTimeout(() => advanceStep(3), 1800),
+        setTimeout(() => advanceStep(4), 2800)
+      ];
+
+      try {
+        const response = await fetch(DEEPSEEK_API, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role:'system', content: systemPrompt },
+              { role:'user', content: '请严格按照4步流程评估以下选题：\n\n' + topic }
+            ],
+            temperature: 0.4,
+            max_tokens: 3000,
+            response_format: { type:'json_object' }
+          })
+        });
+
+        stepTimers.forEach(clearTimeout);
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          if (response.status === 401) throw new Error('API Key 无效，请检查后重新设置（401 未授权）');
+          if (response.status === 429) throw new Error('API 请求过于频繁，请稍后再试（429 限流）');
+          if (response.status === 402) throw new Error('API 余额不足，请前往 DeepSeek 平台充值（402）');
+          throw new Error(errData.error?.message || 'API 请求失败（' + response.status + '）');
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) throw new Error('API 返回内容为空，请重试');
+
+        let parsed;
+        try {
+          parsed = JSON.parse(content);
+        } catch (e) {
+          const cleaned = content.replace(/^```(?:json)?\s*\n?/i,'').replace(/\n?\s*```$/i,'');
+          parsed = JSON.parse(cleaned);
+        }
+
+        if (!parsed.scores) throw new Error('AI 返回数据格式异常，请重试');
+        return parsed;
+
+      } catch (err) {
+        stepTimers.forEach(clearTimeout);
+        hideLoading();
+        if (err.name === 'TypeError' && err.message.includes('fetch')) {
+          showError('网络连接失败，请检查网络后重试');
+        } else {
+          showError(err.message || '评分过程出错，请重试');
+        }
+        return null;
+      }
+    }
+
+    // ===== 历史记录 =====
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem('topic-evaluations') || '[]'); }
+      catch(e) { return []; }
+    }
+    function saveHistory(records) { localStorage.setItem('topic-evaluations', JSON.stringify(records)); }
+    function addRecord(record) {
+      const records = loadHistory();
+      records.unshift({ id: Date.now().toString(), ...record });
+      saveHistory(records);
+      renderHistory();
+    }
+    function deleteRecord(id) {
+      if (!confirm('确定删除这条评价记录吗？')) return;
+      saveHistory(loadHistory().filter(r => r.id !== id));
+      renderHistory();
+    }
+    function clearAllHistory() {
+      const records = loadHistory();
+      if (records.length === 0) return;
+      if (!confirm('确定清空全部 ' + records.length + ' 条评价记录吗？此操作不可恢复。')) return;
+      saveHistory([]);
+      renderHistory();
+    }
+    function exportHistory() {
+      const records = loadHistory();
+      if (records.length === 0) { alert('没有可导出的记录'); return; }
+      const blob = new Blob([JSON.stringify(records, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = '选题评价历史_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderHistory() {
+      const records = loadHistory();
+      if (records.length === 0) {
+        historyList.innerHTML = '<p class="history-empty">还没有评价记录，去评一个选题吧 ✨</p>';
+        return;
+      }
+      historyList.innerHTML = records.map(r => {
+        const gradeInfo = getGrade(r.totalScore, r.redLineViolation);
+        const date = new Date(r.createdAt).toLocaleString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        const scoreColor = r.redLineViolation ? '#b91c1c' : gradeInfo.color;
+        const preview = r.topic.length > 35 ? r.topic.slice(0,35) + '...' : r.topic;
+        return `<div class="history-item" data-id="${r.id}">
+          <div class="history-item-left">
+            <div class="history-item-topic" title="${escapeHtml(r.topic)}">${escapeHtml(preview)}</div>
+            <div class="history-item-date">${date}</div>
+          </div>
+          <div class="history-item-right">
+            <span class="history-item-score" style="color:${scoreColor}">${r.totalScore}</span>
+            <span style="font-size:13px;color:var(--text-muted);">${gradeInfo.grade.slice(0,5)}</span>
+            <button class="history-item-delete" data-action="delete" data-id="${r.id}">×</button>
+          </div></div>`;
+      }).join('');
+
+      historyList.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+          if (e.target.dataset.action === 'delete') { deleteRecord(e.target.dataset.id); return; }
+          const record = records.find(r => r.id === this.dataset.id);
+          if (record) {
+            renderResult({
+              scores: record.scores,
+              redLineViolation: record.redLineViolation,
+              topicUnderstanding: record.topicUnderstanding,
+              backgroundContext: record.backgroundContext
+            }, record.topic);
+            topicInput.value = record.topic;
+            updateCharCount();
+            resultSection.scrollIntoView({ behavior:'smooth', block:'start' });
+          }
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div'); div.textContent = str; return div.innerHTML;
+    }
+
+    // ===== 事件绑定 =====
+    function updateCharCount() {
+      const len = topicInput.value.length;
+      charCount.textContent = len + ' / 1000';
+      charCount.style.color = len > 900 ? 'var(--danger)' : len > 700 ? 'var(--warning)' : 'var(--text-muted)';
+    }
+    topicInput.addEventListener('input', updateCharCount);
+
+    $('#btn-save-key').addEventListener('click', function() {
+      const key = apiKeyInput.value.trim();
+      if (!key) { alert('请输入 API Key'); return; }
+      if (!key.startsWith('sk-')) { alert('API Key 格式不正确，应以 sk- 开头'); return; }
+      saveApiKey(key); updateApiUI(); alert('API Key 已保存！');
+    });
+    $('#btn-clear-key').addEventListener('click', function() {
+      if (!confirm('确定清除保存的 API Key 吗？')) return;
+      clearApiKey(); updateApiUI();
+    });
+    $('#btn-toggle-key').addEventListener('click', function() {
+      apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+      this.textContent = apiKeyInput.type === 'password' ? '👁' : '🙈';
+    });
+
+    btnEvaluate.addEventListener('click', async function() {
+      const topic = topicInput.value.trim();
+      if (!topic) { alert('请输入选题描述'); return; }
+      if (topic.length < 15) { alert('选题描述太短了，请至少写 15 个字，信息越多评分越准'); return; }
+      hideError();
+      btnEvaluate.disabled = true;
+      btnEvaluate.textContent = '⏳ 分析中...';
+      const result = await evaluateTopic(topic);
+      btnEvaluate.disabled = false;
+      btnEvaluate.textContent = '🤖 AI 自动评分';
+      if (result) renderResult(result, topic);
+    });
+
+    $('#btn-save-result').addEventListener('click', function() {
+      if (!resultSection._currentData) return;
+      const d = resultSection._currentData;
+      addRecord({
+        topic: d.topic,
+        scores: d.scores,
+        topicUnderstanding: d.topicUnderstanding,
+        backgroundContext: d.backgroundContext,
+        redLineViolation: d.redLineViolation,
+        totalScore: d.totalScore,
+        createdAt: d.createdAt
+      });
+      const btn = this, orig = btn.textContent;
+      btn.textContent = '✅ 已保存'; btn.disabled = true;
+      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
+    });
+
+    $('#btn-new-eval').addEventListener('click', function() {
+      topicInput.value = ''; updateCharCount();
+      resultSection.classList.remove('active'); hideError();
+      window.scrollTo({ top:0, behavior:'smooth' }); topicInput.focus();
+    });
+
+    $('#btn-export').addEventListener('click', exportHistory);
+    $('#btn-clear-all').addEventListener('click', clearAllHistory);
+
+    function init() { updateApiUI(); updateCharCount(); renderHistory(); }
+    init();
+  })();
+  </script>
+</body>
+</html>
