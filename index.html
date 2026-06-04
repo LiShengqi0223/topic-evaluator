@@ -567,8 +567,24 @@
           dimensionResults.appendChild(commentDiv);
         }
 
+        // 优化建议
+        if (data.optimizationTips && data.optimizationTips.length > 0) {
+          const tipsDiv = document.createElement('div');
+          tipsDiv.style.cssText = 'margin-top:18px;padding:18px 20px;background:#fefce8;border:1px solid #fde68a;border-radius:12px;';
+          tipsDiv.innerHTML = '<h4 style="margin:0 0 12px 0;font-size:16px;color:#a16207;">💡 优化建议</h4>';
+          data.optimizationTips.forEach((tip, i) => {
+            const dim = DIMENSIONS.find(d => d.key === tip.dimension);
+            const dimName = dim ? dim.name : tip.dimension;
+            const tipPara = document.createElement('div');
+            tipPara.style.cssText = 'padding:10px 14px;margin-bottom:8px;background:#fff;border-radius:8px;font-size:14px;line-height:1.6;border-left:3px solid ' + (dim ? 'var(--primary)' : '#e5e7eb');
+            tipPara.innerHTML = '<strong>' + dimName + '（' + tip.score + '分）：</strong>' + tip.tip;
+            tipsDiv.appendChild(tipPara);
+          });
+          dimensionResults.appendChild(tipsDiv);
+        }
+
         resultSection.classList.add('active');
-        resultSection._currentData = { topic, scores, topicUnderstanding: data.topicUnderstanding, backgroundContext: data.backgroundContext, redLineViolation: redLine, totalScore, createdAt: new Date().toISOString() };
+        resultSection._currentData = { topic, scores, topicUnderstanding: data.topicUnderstanding, backgroundContext: data.backgroundContext, optimizationTips: data.optimizationTips, redLineViolation: redLine, totalScore, createdAt: new Date().toISOString() };
         resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 600);
     }
@@ -626,8 +642,17 @@
     "cost": {"score": 40, "reason": "2-3句话具体分析"}
   },
   "redLineViolation": false,
-  "overallComment": "2-3句话总结这个选题的核心优势和主要风险"
+  "overallComment": "2-3句话总结这个选题的核心优势和主要风险",
+  "optimizationTips": [
+    {"dimension": "visual", "score": 40, "tip": "针对可视化低：加入一个人物的实地探访线，用场景镜头替代抽象口播"},
+    {"dimension": "complexity", "score": 35, "tip": "针对太晦涩：把6个知识体系砍到2个核心，其余留作会员加餐"}
+  ]
 }
+
+optimizationTips说明：
+- 只对分数低于60的维度给建议（不含制作成本），优先给分数最低的
+- 每条tip必须是可操作的、具体的改进方案，不能说空话
+- 最多3条，所有维度≥60则返回空数组[]
 
 请务必确保：
 - 每个维度的评分理由具体、有针对性，不要用套话
@@ -765,7 +790,8 @@
               scores: record.scores,
               redLineViolation: record.redLineViolation,
               topicUnderstanding: record.topicUnderstanding,
-              backgroundContext: record.backgroundContext
+              backgroundContext: record.backgroundContext,
+              optimizationTips: record.optimizationTips
             }, record.topic);
             topicInput.value = record.topic;
             updateCharCount();
@@ -823,6 +849,7 @@
         scores: d.scores,
         topicUnderstanding: d.topicUnderstanding,
         backgroundContext: d.backgroundContext,
+        optimizationTips: d.optimizationTips,
         redLineViolation: d.redLineViolation,
         totalScore: d.totalScore,
         createdAt: d.createdAt
