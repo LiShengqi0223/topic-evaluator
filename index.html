@@ -468,7 +468,17 @@
     function renderResult(data, topic) {
       const scores = data.scores;
       const redLine = data.redLineViolation === true;
-      const totalScore = redLine ? 0 : calculateTotal(scores);
+      let totalScore = redLine ? 0 : calculateTotal(scores);
+
+      // 底线惩罚规则：晦涩且没画面 = 观众看不下去
+      const complexityScore = scores.complexity && typeof scores.complexity.score === 'number' ? scores.complexity.score : 100;
+      const visualScore = scores.visual && typeof scores.visual.score === 'number' ? scores.visual.score : 100;
+      const floorPenalty = !redLine && complexityScore < 50 && visualScore < 50;
+      const rawScore = totalScore;
+      if (floorPenalty) {
+        totalScore = Math.round(totalScore * 0.8);
+      }
+
       const gradeInfo = getGrade(totalScore, redLine);
 
       finishAllSteps();
@@ -539,7 +549,13 @@
           }
         }
         calcHtml += parts.join(' + ');
-        calcHtml += ' = <strong>' + totalScore + ' 分</strong></span>';
+        calcHtml += ' = <strong>' + rawScore + ' 分</strong></span>';
+        if (floorPenalty) {
+          calcHtml += '<div style="margin-top:8px;padding:8px 12px;background:#fef3c7;border-radius:6px;font-size:13px;color:#92400e;">';
+          calcHtml += '⚠️ <strong>底线惩罚（-20%）：</strong>内容晦涩程度 ' + complexityScore + ' 分 + 可视化潜力 ' + visualScore + ' 分，均低于 50。';
+          calcHtml += '观众既看不懂又没画面看，大概率中途划走，情绪和猎奇再强也触达不到。';
+          calcHtml += '<br>原始分 ' + rawScore + ' × 0.8 = <strong>' + totalScore + ' 分</strong></div>';
+        }
         calcHtml += '<span style="font-size:12px;color:var(--text-muted);">（各维度分数 × 权重 之和，制作成本不参与计算）</span>';
         calcBreakdown.innerHTML = calcHtml;
 
@@ -616,7 +632,12 @@
 请务必确保：
 - 每个维度的评分理由具体、有针对性，不要用套话
 - 分数要拉开差距，不要全部70-80分
-- 红线判断要准确（正常选题基本都是false）`;
+- 红线判断要准确（正常选题基本都是false）
+
+重要评分规则：
+- 内容晦涩程度：如果选题涉及3个以上不同知识体系（如同时涉及量子物理+道家哲学+CIA阴谋论+神经科学），或者需要高中以上理科知识才能理解，请果断给40分以下
+- 可视化潜力：如果选题大量内容是抽象理论讨论，没有具体场景、人物、事件可拍，请果断给40分以下
+- 以上两条同时触发会导致总分扣除20%（系统自动执行）`;
 
       // 步骤动画定时器
       const stepTimers = [
