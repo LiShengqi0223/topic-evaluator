@@ -438,7 +438,7 @@
         <button type="button" class="btn btn-ghost btn-danger" id="btn-clear-all">🗑 清空</button>
       </div>
       <div class="cta-bar">
-        <p>📞 想让 AI 亲自帮你诊断选题？</p>
+        <p>📞 想让李摩拉亲自帮你诊断选题？</p>
         <button type="button" class="btn btn-primary btn-sm" id="btn-cta-book">✋ 预约连麦诊断</button>
       </div>
     </aside>
@@ -1616,7 +1616,7 @@ optimizationTips说明：
     $('#btn-cta-book').addEventListener('click', function() {
       const brand = getBrand();
       const contact = brand.contact || '请查看报告底部联系方式';
-      alert('📞 预约连麦诊断\n\n' + contact + '\n\n将你评分最低的选题链接发过来，我会在 24 小时内回复。');
+      alert('📞 预约李摩拉 1v1 连麦诊断\n\n' + contact + '\n\n将你评分最低的选题发过来，24 小时内回复。');
     });
 
     function init() { updateApiUI(); updateBrandUI(); updateDNAUI(); updateCharCount(); renderHistory(); }
