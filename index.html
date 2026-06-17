@@ -37,11 +37,52 @@
       min-height: 100vh;
     }
 
+    /* ===== 两栏布局 ===== */
+    .page-layout { display: flex; min-height: 100vh; }
+    .history-sidebar {
+      width: 360px; min-width: 360px; background: #fff;
+      border-right: 1px solid var(--border); padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 12px;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      transition: width 0.3s, min-width 0.3s, padding 0.3s, opacity 0.3s;
+    }
+    .history-sidebar.collapsed {
+      width: 44px; min-width: 44px; padding: 20px 8px; overflow: hidden;
+    }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; }
+    .sidebar-title { font-size: 18px; font-weight: 600; color: var(--primary-dark); }
+    .sidebar-toggle {
+      background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 14px; padding: 4px 8px; color: var(--text-secondary);
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .sidebar-toggle:hover { background: var(--primary-light); color: var(--primary); }
+    .history-sidebar.collapsed .sidebar-title,
+    .history-sidebar.collapsed .calibration-progress,
+    .history-sidebar.collapsed .calibration-section,
+    .history-sidebar.collapsed .history-list,
+    .history-sidebar.collapsed .action-section,
+    .history-sidebar.collapsed .history-empty { display: none; }
+    .history-sidebar.collapsed .sidebar-header { justify-content: center; }
+    .history-sidebar.collapsed .sidebar-toggle { font-size: 16px; padding: 4px 6px; }
+    .history-sidebar .history-list { flex: 1; overflow-y: auto; }
+    .history-sidebar .history-item { padding: 10px 12px; }
+    .history-sidebar .history-item-topic { font-size: 14px; }
+    .history-sidebar .history-item-score { font-size: 18px; }
+    .history-sidebar .action-section { display: flex; gap: 6px; flex-wrap: wrap; }
+    .history-sidebar .action-section .btn { flex: 1; font-size: 12px; padding: 6px 8px; }
+    .history-sidebar .card { box-shadow: none; border: none; padding: 0; margin: 0; }
+    .history-sidebar .card .section-title { font-size: 0; } /* hide the original title */
+
+    .main-content-area {
+      flex: 1; min-width: 0; overflow-y: auto;
+    }
+
     /* ===== 布局 ===== */
     .page-header { text-align: center; padding: 40px 24px 20px; }
     .page-title { font-size: 28px; font-weight: 700; color: var(--primary-dark); }
     .page-subtitle { font-size: 15px; color: var(--text-secondary); margin-top: 6px; }
-    .main-container { max-width: 760px; margin: 0 auto; padding: 0 24px 48px; }
+    .main-container { max-width: 760px; margin: 0 auto; padding: 0 24px 48px; min-width: 400px; }
 
     /* ===== 卡片 ===== */
     .card {
@@ -51,6 +92,61 @@
     }
     .section-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
     .section-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+
+    /* ===== 内容形式选择器 ===== */
+    .format-selector {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 14px; padding: 10px 14px;
+      background: #faf8ff; border-radius: var(--radius-sm); border: 1px solid var(--primary-light);
+    }
+    .format-label { font-size: 14px; font-weight: 600; color: var(--primary-dark); white-space: nowrap; }
+    .format-selector label {
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+      color: var(--text-secondary); transition: color 0.2s;
+    }
+    .format-selector label:hover { color: var(--primary); }
+    .format-selector input[type="radio"] { accent-color: var(--primary); }
+    .format-selector input[type="radio"]:checked + span { color: var(--primary); font-weight: 600; }
+    .format-tip { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* ===== 账号 DNA 卡片（可折叠） ===== */
+    .dna-toggle {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+      font-size: 15px; font-weight: 600; color: var(--text-secondary);
+      user-select: none; padding: 4px 0;
+    }
+    .dna-toggle:hover { color: var(--primary); }
+    .dna-arrow { transition: transform 0.3s; font-size: 12px; }
+    .dna-arrow.open { transform: rotate(90deg); }
+    .dna-body { display: none; margin-top: 12px; }
+    .dna-body.open { display: block; }
+
+    .dna-form { display: flex; flex-direction: column; gap: 14px; }
+    .dna-field { display: flex; flex-direction: column; gap: 4px; }
+    .dna-label { font-size: 14px; font-weight: 500; color: var(--text); }
+    .dna-required { font-size: 11px; color: var(--danger); background: #fef2f2; padding: 1px 6px; border-radius: 3px; margin-left: 4px; }
+    .dna-optional { font-size: 11px; color: var(--text-muted); background: #f3f4f6; padding: 1px 6px; border-radius: 3px; margin-left: 4px; }
+    .dna-textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; font-family: inherit; resize: vertical; outline: none; line-height: 1.6;
+    }
+    .dna-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .dna-textinput {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; font-family: inherit; outline: none;
+    }
+    .dna-textinput:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .dna-actions { display: flex; gap: 8px; align-items: center; }
+    .dna-preview {
+      padding: 12px 14px; background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: var(--radius-sm); margin-top: 4px;
+    }
+    .dna-preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #16a34a; }
+    .dna-preview-text {
+      font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+      white-space: pre-wrap; word-break: break-word; margin: 0;
+      font-family: inherit; max-height: 160px; overflow-y: auto;
+    }
 
     /* ===== API Key ===== */
     .api-setup { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
@@ -65,6 +161,17 @@
     .api-status { font-size: 12px; margin-top: 4px; }
     .api-status.set { color: var(--success); }
     .api-status.unset { color: var(--danger); }
+
+    /* API Key 收起状态 */
+    #api-section.collapsed .api-setup,
+    #api-section.collapsed .section-hint { display: none; }
+    #api-section.collapsed .section-title { font-size: 14px; margin-bottom: 0; }
+    #api-section.collapsed { padding: 12px 24px; }
+    .api-collapsed-bar { display: none; align-items: center; gap: 12px; font-size: 13px; }
+    #api-section.collapsed .api-collapsed-bar { display: flex; }
+    .api-collapsed-bar .api-collapsed-status { color: var(--success); font-weight: 500; }
+    .api-collapsed-bar button { font-size: 12px; }
+    .api-collapsed-bar .api-collapsed-provider { color: var(--text-muted); }
 
     /* ===== 选题输入 ===== */
     .topic-textarea {
@@ -215,13 +322,95 @@
     }
     .history-item-delete:hover { background: #fef2f2; color: var(--danger); }
 
+    /* 历史记录状态标签 */
+    .history-status {
+      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      margin-top: 4px; font-weight: 500;
+    }
+    .history-status.evaluated { background: #f3f4f6; color: #6b7280; }
+    .history-status.produced { background: #fef3c7; color: #92400e; }
+    .history-status.feedback-exceeded { background: #dcfce7; color: #16a34a; }
+    .history-status.feedback-met { background: #dbeafe; color: #2563eb; }
+    .history-status.feedback-below { background: #fef2f2; color: #dc2626; }
+
+    /* 历史记录操作按钮行 */
+    .history-item-actions {
+      display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;
+    }
+    .history-item-actions .btn { font-size: 12px; padding: 3px 10px; }
+
+    /* ===== 反馈模态框 ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card); border-radius: var(--radius-lg); padding: 28px;
+      max-width: 440px; width: 90%; box-shadow: var(--shadow-lg);
+    }
+    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label { display: block; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+    .modal-field input, .modal-field select, .modal-field textarea {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: inherit; outline: none;
+    }
+    .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ===== 自动校准区域 ===== */
+    .calibration-section {
+      margin-top: 14px; padding: 14px 16px; background: #fffbeb;
+      border: 1px solid #fde68a; border-radius: var(--radius-md);
+    }
+    .calibration-section h4 { font-size: 14px; color: #92400e; margin: 0 0 6px; }
+    .calibration-section p { font-size: 12px; color: var(--text-secondary); margin: 0 0 10px; }
+    .calibration-progress { font-size: 12px; color: var(--text-muted); }
+    .calibration-progress strong { color: var(--primary-dark); }
+
+    /* ===== 品牌设置卡片 ===== */
+    .brand-card { padding: 12px 16px; margin-bottom: 8px; }
+    .brand-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .brand-field { flex: 1; min-width: 140px; }
+    .brand-field label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+    .brand-field input {
+      width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; font-family: inherit; outline: none;
+    }
+    .brand-field input:focus { border-color: var(--primary); }
+
+    /* ===== 预约引导条 ===== */
+    .cta-bar {
+      text-align: center; padding: 16px 24px; margin-top: 20px;
+      background: linear-gradient(135deg, var(--primary-light), #ede9fe);
+      border-radius: var(--radius-md); border: 1px solid var(--border);
+    }
+    .cta-bar p { font-size: 14px; color: var(--primary-dark); margin: 0 0 8px; font-weight: 500; }
+    .cta-bar .btn { font-size: 14px; }
+
     /* ===== 页脚 ===== */
     .page-footer { text-align: center; padding: 0 24px 32px; color: var(--text-muted); font-size: 13px; }
 
     /* ===== 响应式 ===== */
+    /* 窄屏：历史栏收到顶部，变单栏 */
+    @media (max-width: 900px) {
+      .page-layout { flex-direction: column; }
+      .history-sidebar {
+        width: 100%; min-width: 100%; height: auto; max-height: 40vh;
+        position: relative; border-right: none; border-bottom: 1px solid var(--border);
+        padding: 16px;
+      }
+      .history-sidebar.collapsed {
+        width: 100%; min-width: 100%; height: auto; max-height: 50px; padding: 10px 16px;
+      }
+      .main-content-area { padding: 0; }
+    }
     @media (max-width: 640px) {
       .page-title { font-size: 22px; }
-      .main-container { padding: 0 16px 32px; }
+      .main-container { padding: 0 12px 32px; }
       .card { padding: 16px; }
       .result-big-number { font-size: 52px; }
       .action-section .btn { flex: 1 1 100%; }
@@ -233,9 +422,33 @@
 </head>
 <body>
 
+  <div class="page-layout">
+
+    <!-- ===== 左侧：评价历史 ===== -->
+    <aside class="history-sidebar" id="history-sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">📊 评价历史</h2>
+        <button class="sidebar-toggle" id="sidebar-toggle" title="收起/展开历史栏">◀</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <p class="history-empty" id="history-empty">还没有评价记录<br>去评一个选题吧 ✨</p>
+      </div>
+      <div class="action-section">
+        <button type="button" class="btn btn-secondary" id="btn-export">📥 导出</button>
+        <button type="button" class="btn btn-ghost btn-danger" id="btn-clear-all">🗑 清空</button>
+      </div>
+      <div class="cta-bar">
+        <p>📞 想让 AI 亲自帮你诊断选题？</p>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-cta-book">✋ 预约连麦诊断</button>
+      </div>
+    </aside>
+
+    <!-- ===== 右侧：主内容 ===== -->
+    <div class="main-content-area">
+
   <header class="page-header">
     <h1 class="page-title">🎯 自媒体选题评价助手</h1>
-    <p class="page-subtitle">粘贴选题 → AI 自动理解分析 → 8 维度打分 → 告诉你值不值得做</p>
+    <p class="page-subtitle">粘贴选题 → AI 自动理解分析 → 9 维度打分 → 告诉你值不值得做</p>
   </header>
 
   <main class="main-container">
@@ -244,6 +457,12 @@
     <section class="card" id="api-section">
       <h2 class="section-title">🔑 DeepSeek API 设置</h2>
       <p class="section-hint">需要 API Key（<a href="https://platform.deepseek.com/" target="_blank" style="color:var(--primary);">免费注册获取</a>），Key 只存在你的浏览器里</p>
+      <div class="api-collapsed-bar">
+        <span class="api-collapsed-status">✅ API Key 已设置</span>
+        <span class="api-collapsed-provider">· DeepSeek ·</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-expand-api">修改</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-key-collapsed">清除</button>
+      </div>
       <div class="api-setup">
         <div class="api-input-group">
           <label for="api-key-input">API Key</label>
@@ -258,14 +477,74 @@
       </div>
     </section>
 
+    <!-- ===== 账号 DNA（可选，折叠收起） ===== -->
+    <section class="card" id="dna-section">
+      <div class="dna-toggle" id="dna-toggle">
+        <span class="dna-arrow" id="dna-arrow">▶</span> 🧬 账号 DNA（可选）
+      </div>
+      <p class="section-hint" style="margin-bottom:8px;">回答 3 个问题，生成你账号的内容规律，AI 评分时自动参照。<a href="#" id="dna-guide-link">为什么有用？</a></p>
+      <div class="dna-body" id="dna-body">
+        <div class="dna-form">
+          <div class="dna-field">
+            <label class="dna-label">🔥 你频道最火的 3 个选题是什么？<span class="dna-required">必填</span></label>
+            <textarea class="dna-textarea dna-input-hot" id="dna-hot" rows="3"
+              placeholder="直接粘贴标题，一行一个：&#10;爱因斯坦生前最擔心的事——南極冰下最新發現……&#10;騙了全世界17年！保鏢臨終日記曝光……&#10;2025年3月，馬航重啟調查……"></textarea>
+          </div>
+          <div class="dna-field">
+            <label class="dna-label">❄️ 最凉的 3 个选题是什么？<span class="dna-required">必填</span></label>
+            <textarea class="dna-textarea dna-input-cold" id="dna-cold" rows="3"
+              placeholder="直接粘贴标题，一行一个：&#10;三星恐怖的『滅台計劃』……&#10;《駭客任務》上映27週年……&#10;川普要斬殺美聯儲？……"></textarea>
+          </div>
+          <div class="dna-field">
+            <label class="dna-label">💡 你觉得火和凉之间最大的区别是什么？<span class="dna-optional">选填</span></label>
+            <input type="text" class="dna-textinput" id="dna-insight"
+              placeholder="一句话就行，比如：火的内容都有具体人物或事件锚点，凉的都是纯概念或受众太窄的话题">
+          </div>
+          <div class="dna-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-generate-dna">🧬 生成 DNA</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-dna">清除</button>
+          </div>
+          <div class="dna-preview" id="dna-preview" style="display:none;">
+            <div class="dna-preview-header">
+              <span>✅ DNA 已生成</span>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-edit-dna">编辑</button>
+            </div>
+            <pre class="dna-preview-text" id="dna-preview-text"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 品牌设置 ===== -->
+    <section class="card brand-card" id="brand-section">
+      <div class="brand-row">
+        <div class="brand-field">
+          <label>🏷 你的品牌名（显示在报告上）</label>
+          <input type="text" id="brand-name" placeholder="例：选题诊断 · 张三" maxlength="30">
+        </div>
+        <div class="brand-field">
+          <label>📞 联系方式（显示在报告底部）</label>
+          <input type="text" id="brand-contact" placeholder="例：微信 zhang3 / 扫码预约" maxlength="50">
+        </div>
+      </div>
+    </section>
+
     <!-- ===== 选题输入 ===== -->
     <section class="card">
       <h2 class="section-title">📝 输入选题</h2>
+      <div class="format-selector">
+        <span class="format-label">内容形式：</span>
+        <label><input type="radio" name="content-format" value="short-video" checked><span>短视频</span></label>
+        <label><input type="radio" name="content-format" value="long-video"><span>长视频</span></label>
+        <label><input type="radio" name="content-format" value="image-text"><span>图文</span></label>
+        <label><input type="radio" name="content-format" value="livestream"><span>直播</span></label>
+      </div>
+      <p class="format-tip">不同形式对"好不好拍""难不难懂"的评判标准不同，选对形式评分才准</p>
       <textarea class="topic-textarea" id="topic-input" rows="5"
         placeholder="粘贴你想评估的选题，越详细越好。比如：&#10;「最近很多年轻人开始抵制网红餐厅，转而打卡社区里的老年食堂。我想做一期视频，探访 5 家上海的社区老年食堂，对比价格、口味和氛围，讨论消费降级时代的生活方式变化」"
-        maxlength="1000"></textarea>
+        maxlength="2000"></textarea>
       <div class="input-footer">
-        <span class="char-count" id="char-count">0 / 1000</span>
+        <span class="char-count" id="char-count">0 / 2000</span>
         <button type="button" class="btn-evaluate" id="btn-evaluate" disabled>🤖 AI 自动评分</button>
       </div>
     </section>
@@ -278,7 +557,7 @@
       <div class="loading-steps">
         <div class="loading-step" id="step-1"><span class="step-icon">1</span> 🔍 理解选题核心——AI 正在解读你的选题在说什么、面向谁、属于什么赛道</div>
         <div class="loading-step" id="step-2"><span class="step-icon">2</span> 🧠 激活背景知识——AI 正在调用对该领域的认知：受众画像、相关热点、平台规律</div>
-        <div class="loading-step" id="step-3"><span class="step-icon">3</span> 📊 逐维度评分——从 8 个维度分别评估，每个维度给出详细理由</div>
+        <div class="loading-step" id="step-3"><span class="step-icon">3</span> 📊 逐维度评分——从 9 个维度分别评估，每个维度给出详细理由</div>
         <div class="loading-step" id="step-4"><span class="step-icon">4</span> 📝 生成分析报告——计算综合得分，整理评估结论</div>
       </div>
       <div class="loading-spinner"></div>
@@ -292,6 +571,7 @@
         <div class="result-grade" id="result-grade"></div>
         <p class="result-suggestion" id="result-suggestion"></p>
         <p class="redline-warning" id="redline-warning">⚠️ 选题涉及法律红线，建议立即放弃！</p>
+        <p class="score-disclaimer" id="score-disclaimer" style="font-size:12px;color:var(--text-muted);margin-top:8px;font-style:italic;display:none;"></p>
       </div>
 
       <!-- AI 对选题的理解 -->
@@ -307,7 +587,7 @@
       </div>
 
       <!-- 各维度评分 -->
-      <div class="section-divider">📋 8 维度评分详情</div>
+      <div class="section-divider">📋 9 维度评分详情</div>
       <div class="dimension-results" id="dimension-results"></div>
 
       <!-- 计算过程 -->
@@ -316,30 +596,48 @@
       <!-- 操作 -->
       <div class="result-actions">
         <button type="button" class="btn btn-primary" id="btn-save-result">💾 保存到历史</button>
+        <button type="button" class="btn btn-secondary" id="btn-copy-report">📋 复制报告</button>
         <button type="button" class="btn btn-ghost" id="btn-new-eval">🔄 评下一个</button>
-      </div>
-    </section>
-
-    <!-- ===== 操作按钮 ===== -->
-    <section class="action-section">
-      <button type="button" class="btn btn-secondary" id="btn-export">📥 导出备份</button>
-      <button type="button" class="btn btn-ghost btn-danger" id="btn-clear-all">🗑 清空历史</button>
-    </section>
-
-    <!-- ===== 评价历史 ===== -->
-    <section class="card">
-      <h2 class="section-title">📊 评价历史</h2>
-      <div class="history-list" id="history-list">
-        <p class="history-empty" id="history-empty">还没有评价记录，去评一个选题吧 ✨</p>
       </div>
     </section>
 
   </main>
 
+    </div><!-- /main-content-area -->
+  </div><!-- /page-layout -->
+
+  <!-- ===== 反馈模态框 ===== -->
+  <div class="modal-overlay" id="feedback-modal">
+    <div class="modal-card">
+      <div class="modal-title">📊 填写反馈</div>
+      <div class="modal-field">
+        <label>实际播放量</label>
+        <input type="number" id="fb-views" placeholder="例：1200000（填数字，不知道就留空）">
+      </div>
+      <div class="modal-field">
+        <label>实际表现</label>
+        <select id="fb-performance">
+          <option value="">请选择</option>
+          <option value="exceeded">🔥 超出预期</option>
+          <option value="met">✅ 符合预期</option>
+          <option value="below">❌ 低于预期</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>一句话复盘（选填）</label>
+        <input type="text" id="fb-reflection" placeholder="为什么爆/为什么凉？">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-fb">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-save-fb">💾 保存反馈</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="page-footer">
     <p>所有数据仅存储在本地浏览器 · API Key 和评价历史不会上传到任何服务器</p>
   </footer>
-
+  (function() {
   <script>
   (function() {
     'use strict';
@@ -367,19 +665,41 @@
     const calcBreakdown = $('#calc-breakdown');
     const historyList = $('#history-list');
     const historyEmpty = $('#history-empty');
+    const dnaToggle = $('#dna-toggle');
+    const dnaArrow = $('#dna-arrow');
+    const dnaBody = $('#dna-body');
+    const dnaHot = $('#dna-hot');
+    const dnaCold = $('#dna-cold');
+    const dnaInsight = $('#dna-insight');
+    const dnaPreview = $('#dna-preview');
+    const dnaPreviewText = $('#dna-preview-text');
+    const btnGenerateDNA = $('#btn-generate-dna');
+    const btnEditDNA = $('#btn-edit-dna');
+    const dnaGuideLink = $('#dna-guide-link');
+
+    // 反馈模态框 DOM
+    const feedbackModal = $('#feedback-modal');
+    const fbViews = $('#fb-views');
+    const fbPerformance = $('#fb-performance');
+    const fbReflection = $('#fb-reflection');
+    let _currentFbRecordId = null; // 当前正在填反馈的记录 ID
+
+    // 品牌设置 DOM
+    const brandNameInput = $('#brand-name');
+    const brandContactInput = $('#brand-contact');
 
     // ===== 常量 =====
     const DEEPSEEK_API = 'https://api.deepseek.com/v1/chat/completions';
     const DIMENSIONS = [
-      { key:'emotion',   name:'🔥 情绪的浓烈程度', weight:30, cssClass:'emotion',   desc:'愤怒/不公/恐惧/猎奇/喜悦——越强烈越高分' },
-      { key:'curiosity', name:'🌀 猎奇程度',       weight:16, cssClass:'curiosity', desc:'颠覆常识/突破底线/反差荒诞——越出人意料越高分' },
+      { key:'emotion',   name:'🔥 情绪的浓烈程度', weight:30, cssClass:'emotion',   desc:'愤怒/不公/恐惧/喜悦——观众看完后的生理唤醒强度（侧重"感受"）' },
+      { key:'curiosity', name:'🌀 猎奇程度',       weight:16, cssClass:'curiosity', desc:'颠覆常识/突破底线/反差荒诞——选题本身的意外性（侧重"信息"）' },
       { key:'cognition', name:'🧠 默认认知程度',    weight:12, cssClass:'cognition', desc:'一知半解=最高分；熟知/一无所知=较低分' },
-      { key:'resonance', name:'🌐 共鸣广度',       weight:10, cssClass:'resonance', desc:'个人→家庭→社会→国家→世界' },
-      { key:'complexity',name:'🧩 内容晦涩程度',    weight:10, cssClass:'complexity',desc:'故事越简单、行文越轻松=越高分；逻辑层叠+理科知识=越低分' },
-      { key:'visual',    name:'📸 可视化潜力',     weight:8,  cssClass:'visual',    desc:'选题是否容易拍出好看/有趣的画面？画面感越强越高分' },
+      { key:'resonance', name:'🌐 共鸣广度',       weight:10, cssClass:'resonance', desc:'多少人会觉得"这跟我有关"（客观关联），个人→家庭→社会→国家→世界' },
+      { key:'complexity',name:'🧩 内容晦涩程度',    weight:10, cssClass:'complexity',desc:'故事越简单、行文越轻松=越高分；逻辑层叠+理科知识=越低分（标准因形式而异）' },
+      { key:'visual',    name:'📸 可视化潜力',     weight:8,  cssClass:'visual',    desc:'能否拍出吸引人的画面？标准因形式而异：短视频看单帧冲击力，长视频看镜头丰富度' },
       { key:'algorithm', name:'🤖 平台算法友好度',  weight:5,  cssClass:'algorithm', desc:'完播率/互动率/分享率的预期如何' },
       { key:'trend',     name:'📡 流行热点关联度',  weight:5,  cssClass:'trend',     desc:'是否关联当下热点话题或流行趋势' },
-      { key:'audience',  name:'👥 受众规模',       weight:4,  cssClass:'audience',  desc:'感兴趣人群的广度——全民向还是小众' },
+      { key:'audience',  name:'👥 受众规模',       weight:4,  cssClass:'audience',  desc:'多少人会感兴趣（主观意愿），全民向→大众向→圈层向→小众向' },
       { key:'cost',      name:'💰 制作成本（参考）',weight:0,  cssClass:'cost',      desc:'分数越高=成本越低，不计入总分' }
     ];
 
@@ -389,17 +709,206 @@
     function clearApiKey() { localStorage.removeItem('deepseek-api-key'); }
     function updateApiUI() {
       const key = getApiKey();
+      const apiSection = $('#api-section');
       if (key) {
         apiKeyInput.value = key;
         apiStatus.textContent = '✅ API Key 已设置';
         apiStatus.className = 'api-status set';
         btnEvaluate.disabled = false;
+        apiSection.classList.add('collapsed');
       } else {
         apiKeyInput.value = '';
         apiStatus.textContent = '⚠ 尚未设置 API Key（免费注册: platform.deepseek.com）';
         apiStatus.className = 'api-status unset';
         btnEvaluate.disabled = true;
+        apiSection.classList.remove('collapsed');
       }
+    }
+
+    // ===== 品牌设置 =====
+    function getBrand() {
+      return {
+        name: localStorage.getItem('brand-name') || '',
+        contact: localStorage.getItem('brand-contact') || ''
+      };
+    }
+    function saveBrandName(v) { localStorage.setItem('brand-name', v.trim()); }
+    function saveBrandContact(v) { localStorage.setItem('brand-contact', v.trim()); }
+    function updateBrandUI() {
+      const b = getBrand();
+      if (b.name) brandNameInput.value = b.name;
+      if (b.contact) brandContactInput.value = b.contact;
+    }
+
+    // ===== 账号 DNA 管理 =====
+    function getDNA() { return localStorage.getItem('account-dna') || ''; }
+    function saveDNA(text) { localStorage.setItem('account-dna', text.trim()); }
+    function clearDNA() {
+      localStorage.removeItem('account-dna');
+      dnaHot.value = '';
+      dnaCold.value = '';
+      dnaInsight.value = '';
+      dnaPreview.style.display = 'none';
+    }
+    function updateDNAUI() {
+      const dna = getDNA();
+      if (dna) {
+        // 尝试解析回字段（简单的标记格式）
+        const hotMatch = dna.match(/### 🔥.*?\n([\s\S]*?)(?=###|$)/);
+        const coldMatch = dna.match(/### ❄️.*?\n([\s\S]*?)(?=###|$)/);
+        const insightMatch = dna.match(/### 💡.*?\n([\s\S]*?)(?=###|$)/);
+        if (hotMatch) dnaHot.value = hotMatch[1].trim().replace(/^\d+\.\s*/gm, '');
+        if (coldMatch) dnaCold.value = coldMatch[1].trim().replace(/^\d+\.\s*/gm, '');
+        if (insightMatch) dnaInsight.value = insightMatch[1].trim();
+        showDNAPreview(dna);
+      }
+    }
+    function generateDNA() {
+      const hot = dnaHot.value.trim();
+      const cold = dnaCold.value.trim();
+      const insight = dnaInsight.value.trim();
+
+      if (!hot || !cold) {
+        alert('请至少填写"最火的 3 个选题"和"最凉的 3 个选题"');
+        return false;
+      }
+
+      // 把用户输入格式化成编号列表
+      const hotLines = hot.split('\n').filter(l => l.trim()).map(l => l.replace(/^\d+[\.\、\s]+/, ''));
+      const coldLines = cold.split('\n').filter(l => l.trim()).map(l => l.replace(/^\d+[\.\、\s]+/, ''));
+
+      const dna = [
+        '## 账号 DNA（基于用户提供的数据）',
+        '',
+        '### 🔥 该账号最火的选题',
+        ...hotLines.map((t, i) => `${i+1}. ${t}`),
+        '',
+        '### ❄️ 该账号最凉的选题',
+        ...coldLines.map((t, i) => `${i+1}. ${t}`),
+        '',
+        insight ? `### 💡 用户对差异的判断\n${insight}\n` : '',
+        '评分时请参照以上规律作为参考视角。注意：以上仅为该账号的历史数据，存在样本偏差可能。通用评分标准仍是评分基准，DNA规律仅作微调参考，不应推翻通用判断。'
+      ].join('\n');
+
+      saveDNA(dna);
+      showDNAPreview(dna);
+      return true;
+    }
+    function showDNAPreview(dna) {
+      dnaPreviewText.textContent = dna;
+      dnaPreview.style.display = 'block';
+      btnGenerateDNA.textContent = '🔄 重新生成';
+    }
+
+    // ===== 反馈 & 校准 =====
+    function openFeedbackModal(recordId) {
+      const records = loadHistory();
+      const record = records.find(r => r.id === recordId);
+      if (!record) return;
+      _currentFbRecordId = recordId;
+      const fb = record.feedback || {};
+      fbViews.value = fb.actualViews || '';
+      fbPerformance.value = fb.performance || '';
+      fbReflection.value = fb.reflection || '';
+      feedbackModal.classList.add('active');
+    }
+    function closeFeedbackModal() {
+      feedbackModal.classList.remove('active');
+      _currentFbRecordId = null;
+    }
+    function saveFeedback() {
+      if (!_currentFbRecordId) return;
+      const records = loadHistory();
+      const idx = records.findIndex(r => r.id === _currentFbRecordId);
+      if (idx < 0) return;
+      const perf = fbPerformance.value;
+      if (!perf) { alert('请选择实际表现'); return; }
+      records[idx].feedback = {
+        actualViews: parseInt(fbViews.value) || 0,
+        performance: perf,
+        reflection: fbReflection.value.trim()
+      };
+      records[idx].status = 'feedback';
+      saveHistory(records);
+      closeFeedbackModal();
+      renderHistory();
+    }
+    function markProduced(recordId) {
+      const records = loadHistory();
+      const idx = records.findIndex(r => r.id === recordId);
+      if (idx < 0) return;
+      records[idx].status = 'produced';
+      saveHistory(records);
+      renderHistory();
+    }
+    function getFeedbackCount() {
+      return loadHistory().filter(r => r.status === 'feedback' && r.feedback).length;
+    }
+    function getStatusLabel(record) {
+      if (record.status === 'feedback' && record.feedback) {
+        const fb = record.feedback;
+        if (fb.performance === 'exceeded') return { text: '🔥 超出预期', cls: 'feedback-exceeded' };
+        if (fb.performance === 'met') return { text: '✅ 符合预期', cls: 'feedback-met' };
+        if (fb.performance === 'below') return { text: '❌ 低于预期', cls: 'feedback-below' };
+      }
+      if (record.status === 'produced') return { text: '🎬 已制作', cls: 'produced' };
+      return { text: '📝 已评分', cls: 'evaluated' };
+    }
+
+    // 自动校准：用反馈数据反推 DNA
+    async function runCalibration() {
+      const apiKey = getApiKey();
+      if (!apiKey) { alert('请先设置 API Key'); return; }
+      const records = loadHistory().filter(r => r.status === 'feedback' && r.feedback);
+      if (records.length < 5) { alert('至少需要 5 条带反馈的记录才能校准。当前：' + records.length + ' 条'); return; }
+
+      const btn = $('#btn-calibrate');
+      btn.disabled = true; btn.textContent = '⏳ 分析中...';
+
+      const summary = records.map(r => {
+        const fb = r.feedback;
+        return [
+          '---',
+          '选题：' + r.topic.slice(0, 100),
+          'AI 评分：' + r.totalScore + ' 分',
+          '实际表现：' + (fb.performance === 'exceeded' ? '超出预期' : fb.performance === 'met' ? '符合预期' : '低于预期'),
+          '实际播放量：' + (fb.actualViews > 0 ? (fb.actualViews/10000).toFixed(1) + '万' : '未填'),
+          '复盘：' + (fb.reflection || '无')
+        ].join('\n');
+      }).join('\n');
+
+      try {
+        const resp = await fetch(DEEPSEEK_API, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role:'system', content: '你是内容策略分析师。用户会给你一批选题的 AI 预测评分和实际表现数据。请保守地分析：只报告出现3次以上的规律，不确定的标注"待验证"。输出格式：## 账号 DNA（自动校准 · 仅供参考）\\n\\n⚠️ 基于X条反馈生成，样本量有限。以下规律是参考，不是铁律。\\n\\n### 高置信度规律\\n...\\n\\n### 待更多数据验证\\n...' },
+              { role:'user', content: '以下是 ' + records.length + ' 条选题的 AI 预测 vs 实际表现。请分析偏差规律：\n\n' + summary }
+            ],
+            temperature: 0.3, max_tokens: 2000
+          })
+        });
+        const data = await resp.json();
+        const calibratedDNA = data.choices?.[0]?.message?.content;
+        if (calibratedDNA) {
+          saveDNA(calibratedDNA);
+          updateDNAUI();
+          // 记录校准日期
+          const today = new Date().toLocaleString('zh-CN', { month:'numeric', day:'numeric' });
+          localStorage.setItem('last-calibration-date', today);
+          renderHistory(); // 刷新统计栏
+          dnaBody.classList.add('open');
+          dnaArrow.classList.add('open');
+          alert('✅ 自动校准完成！DNA 已更新。展开"账号 DNA"卡片查看。');
+        } else {
+          alert('校准失败，AI 未返回有效结果，请重试');
+        }
+      } catch(e) {
+        alert('校准失败：' + (e.message || '网络错误'));
+      }
+      btn.disabled = false; btn.textContent = '🔬 自动分析我的规律';
     }
 
     // ===== 错误/加载 =====
@@ -491,6 +1000,14 @@
         resultGrade.textContent = gradeInfo.grade;
         resultSuggestion.textContent = gradeInfo.suggestion;
         redlineWarning.style.display = redLine ? 'block' : 'none';
+        // 免责提示：高分不保证好内容
+        const disclaimerEl = $('#score-disclaimer');
+        if (!redLine && totalScore >= 55) {
+          disclaimerEl.textContent = '💡 分数衡量选题潜力，不保证内容质量。高情绪+高猎奇的选题尤其容易"眼高手低"——选题好但稿子烂，比选题差更可惜。';
+          disclaimerEl.style.display = 'block';
+        } else {
+          disclaimerEl.style.display = 'none';
+        }
         resultHero.className = 'result-hero ' + gradeInfo.cssClass;
 
         // AI 对选题的理解
@@ -584,7 +1101,7 @@
         }
 
         resultSection.classList.add('active');
-        resultSection._currentData = { topic, scores, topicUnderstanding: data.topicUnderstanding, backgroundContext: data.backgroundContext, optimizationTips: data.optimizationTips, redLineViolation: redLine, totalScore, createdAt: new Date().toISOString() };
+        resultSection._currentData = { topic, scores, topicUnderstanding: data.topicUnderstanding, backgroundContext: data.backgroundContext, optimizationTips: data.optimizationTips, redLineViolation: redLine, totalScore, createdAt: new Date().toISOString(), status: 'evaluated' };
         resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 600);
     }
@@ -594,32 +1111,44 @@
       const apiKey = getApiKey();
       if (!apiKey) { showError('请先设置 DeepSeek API Key'); return; }
 
+      // 获取选中的内容形式
+      const formatRadio = document.querySelector('input[name="content-format"]:checked');
+      const format = formatRadio ? formatRadio.value : 'short-video';
+      const formatNames = { 'short-video':'短视频', 'long-video':'长视频', 'image-text':'图文', 'livestream':'直播' };
+      const formatName = formatNames[format] || '短视频';
+
       startLoadingAnimation();
       advanceStep(1);
 
-      const systemPrompt = `你是一个资深的自媒体选题评估专家，拥有丰富的短视频/图文内容创作经验。用户会给你一个选题描述，你需要像一位专业的内容策略师一样，先深度理解这个选题，再逐维度评估。
+      const systemPrompt = `你是一个资深的自媒体选题评估专家，拥有丰富的短视频/图文/长视频/直播内容创作经验。用户会给你一个选题描述和选择的内容形式，你需要结合内容形式的特点，先深度理解这个选题，再逐维度评估。
 
 请按以下步骤完成评估：
 
 **第1步：理解选题**
-仔细分析用户给的信息：这个选题在说什么？目标受众是谁？属于什么内容赛道（如生活方式/社会评论/知识科普/美食/旅行等）？
+仔细分析用户给的信息：这个选题在说什么？目标受众是谁？属于什么内容赛道（如生活方式/社会评论/知识科普/美食/旅行等）？用户选择的内容形式是否适合这个选题？
 
 **第2步：激活背景知识**
 基于你对自媒体生态、受众心理、平台算法的了解，分析这个选题所在的赛道特点、受众的典型需求、当前该赛道的竞争态势。
 
 **第3步：逐维度评分**
-根据以下8个评分维度给分（0-100），每个维度的理由写2-3句话，要有具体的分析，不能泛泛而谈。
+根据以下10个评分维度给分（0-100），每个维度的理由写2-3句话，要有具体的分析，不能泛泛而谈。注意部分维度之间有微妙的区分，请仔细阅读每条下面的"区分要点"。
 
 评分维度：
-1. 情绪的浓烈程度（30%）：选题能否激起愤怒/不公/恐惧/猎奇/喜悦等高唤醒情绪？心理学研究表明高唤醒情绪是内容传播的第一驱动力。结合选题的具体内容分析它能触发哪些情绪、强度如何。
+1. 情绪的浓烈程度（30%）：选题能否激起愤怒/不公/恐惧/喜悦等高唤醒情绪？心理学研究表明高唤醒情绪是内容传播的第一驱动力。结合选题的具体内容分析它能触发哪些情绪、强度如何。
+   区分要点：情绪评估的是"观众看完后的生理唤醒强度"，侧重感受层面。而猎奇评估的是"选题信息本身有多意外"，侧重认知层面。高情绪低猎奇（如感人的亲情故事）和高猎奇低情绪（如冷门科学冷知识）都应各自独立评分，不要让两者联动。
 2. 猎奇程度（16%）：是否颠覆常识/突破底线/反差荒诞/涉及未知领域？社交货币理论指出人们分享内容的根本动机之一是显得自己"知情"。结合选题分析其新颖性。
+   区分要点：猎奇评估"信息本身的意外性"，不是"信息带来的情绪"。一个选题可以情绪浓烈但毫无猎奇（婆媳吵架），也可以猎奇拉满但情绪平淡（罕见物理现象科普）。与第1维度独立评分。
 3. 默认认知程度（12%）：大众对这个话题的认知状态。一知半解（知道一点但不深入）=最高分90-100；有所了解=60-89；一无所知=30-59；非常熟知=0-29。分析选题的"好奇心缺口"有多大。
-4. 共鸣广度（10%）：涉及范围从个人→家庭→社会→国家→世界。分析多少人会觉得"这跟我有关"。
+4. 共鸣广度（10%）：涉及范围从个人→家庭→社会→国家→世界。分析多少人会觉得"这跟我有关"（客观关联性）。
+   区分要点：共鸣评估的是"客观上多少人与此相关"（如房贷政策→几亿房奴都相关），而受众规模评估的是"主观上多少人会感兴趣"（如量子物理→客观相关的人少，但好奇的人可能不少）。两者独立评分，不要用"感兴趣的人多"来推高共鸣广度。
 5. 内容晦涩程度（10%）：故事和行文是否简单易懂？故事越简单直白、讲述门槛越低=越高分；反之，涉及复杂逻辑链条、多层反转、高中以上理科知识的=越低分。认知流畅性理论表明，信息越容易理解，越容易被接受和传播。
-6. 可视化潜力（8%）：这个选题是否容易拍出好看/有趣/有冲击力的画面？画面感越强越高分。纯抽象讨论（如宏观经济、哲学）可视化潜力低；场景丰富、对比强烈的选题可视化潜力高。
+   形式适配：短视频要求3秒内能理解核心信息（门槛极低）；长视频允许中等复杂度（有足够时长展开）；图文允许较高复杂度（用户可反复阅读保存）；直播允许中等复杂度（实时互动辅助理解）。请根据用户选择的形式调整评分标准。
+6. 可视化潜力（8%）：这个选题是否容易拍出吸引人的画面？画面感越强越高分。纯抽象讨论在所有形式下可视化潜力都偏低。
+   形式适配：短视频看单帧冲击力（封面和前3秒画面能否抓住人）；长视频看镜头丰富度（是否有足够场景/人物/对比画面支撑时长）；图文看封面图表现力（能否一张图传达核心信息）；直播看出镜人表现力和场景持续可看性。请根据用户选择的形式调整评分标准。
 7. 平台算法友好度（5%）：高完播率预期？高互动（评论/点赞/弹幕）预期？高分享/收藏预期？分析内容形式和话题类型是否利于算法推荐。特别注意：如果选题涉及UFO、外星人、未解之谜等超自然话题，默认给低分（平台算法对此类内容限流严重），除非是官方证实的重大事件（如人类与外星文明正式接触、世界著名UFO之谜被官方解密等）。
 8. 流行热点关联度（5%）：是否关联当前社会热点、流行趋势或季节话题？分析时效性。
-9. 受众规模（4%）：感兴趣的人群有多大？全民向/大众向/圈层向/小众向？分析潜在受众体量。
+9. 受众规模（4%）：感兴趣的人群有多大？全民向/大众向/圈层向/小众向？分析潜在受众体量（主观兴趣范围）。
+   区分要点：受众评估的是"多少人对此主观上感兴趣"，与共鸣的"客观上多少人相关"不同。如"AI替代工作"——共鸣极广（所有打工人都相关），但主动关心的人可能只是科技圈。两者独立评分，不要用"相关的人多"来推高受众规模。
 10. 制作成本（不计分）：制作这期内容需要多少时间/金钱/精力？分数越高=成本越低。
 
 **第4步：法律红线判断**
@@ -677,10 +1206,17 @@ optimizationTips说明：
           headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
           body: JSON.stringify({
             model: 'deepseek-chat',
-            messages: [
-              { role:'system', content: systemPrompt },
-              { role:'user', content: '请严格按照4步流程评估以下选题：\n\n' + topic }
-            ],
+            messages: (function() {
+              const dna = getDNA();
+              const msgs = [
+                { role:'system', content: systemPrompt }
+              ];
+              if (dna) {
+                msgs.push({ role:'system', content: '以下是该账号的历史数据（\"账号DNA\"），仅供参考。评分以通用标准为准，DNA仅作为辅助视角——如果DNA规律恰好解释了某个维度的判断，可以在评分理由中提及，但不应改变评分本身。\n\n' + dna });
+              }
+              msgs.push({ role:'user', content: '内容形式：' + formatName + '\n请严格按照4步流程评估以下选题：\n\n' + topic });
+              return msgs;
+            })(),
             temperature: 0.1,
             max_tokens: 3000,
             response_format: { type:'json_object' }
@@ -736,10 +1272,39 @@ optimizationTips说明：
       saveHistory(records);
       renderHistory();
     }
+    let _undoTimer = null;
+    let _undoRecord = null;
     function deleteRecord(id) {
-      if (!confirm('确定删除这条评价记录吗？')) return;
-      saveHistory(loadHistory().filter(r => r.id !== id));
+      const records = loadHistory();
+      const record = records.find(r => r.id === id);
+      if (!record) return;
+      // 存起来等撤回
+      _undoRecord = record;
+      saveHistory(records.filter(r => r.id !== id));
       renderHistory();
+      // 在历史列表顶部插入撤回提示
+      const undoBar = document.createElement('div');
+      undoBar.id = 'undo-bar';
+      undoBar.style.cssText = 'padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
+      undoBar.innerHTML = '<span>🗑 已删除「' + escapeHtml(record.topic.slice(0, 30)) + '…」</span><button class="btn btn-sm btn-secondary" id="btn-undo">↩ 撤回</button>';
+      historyList.insertBefore(undoBar, historyList.firstChild);
+      // 撤回按钮
+      $('#btn-undo').addEventListener('click', function() {
+        if (_undoRecord) {
+          const cur = loadHistory();
+          cur.unshift(_undoRecord);
+          saveHistory(cur);
+          _undoRecord = null;
+          clearTimeout(_undoTimer);
+          renderHistory();
+        }
+      });
+      // 3 秒后自动清除
+      _undoTimer = setTimeout(function() {
+        const bar = $('#undo-bar');
+        if (bar) bar.remove();
+        _undoRecord = null;
+      }, 3000);
     }
     function clearAllHistory() {
       const records = loadHistory();
@@ -764,15 +1329,40 @@ optimizationTips说明：
         historyList.innerHTML = '<p class="history-empty">还没有评价记录，去评一个选题吧 ✨</p>';
         return;
       }
-      historyList.innerHTML = records.map(r => {
+      const fbCount = getFeedbackCount();
+      const fbExceeded = records.filter(r => r.feedback && r.feedback.performance === 'exceeded').length;
+      const calDate = localStorage.getItem('last-calibration-date') || '';
+      const calDateStr = calDate ? ' · 上次校准 ' + calDate : '';
+      const statsHtml = `<div class="calibration-progress" style="margin-bottom:14px;padding:8px 14px;background:#f9fafb;border-radius:8px;font-size:13px;color:var(--text-secondary);">
+        📊 共 <strong>${records.length}</strong> 次评分 · <strong>${fbCount}</strong> 次已反馈 · <strong>${fbExceeded}</strong> 次超出预期${calDateStr}
+      </div>`;
+      historyList.innerHTML = statsHtml + (fbCount >= 5 ? `<div class="calibration-section" style="margin-bottom:12px;">
+        <h4>🔬 已有 ${fbCount} 条反馈</h4>
+        <p>数据够用了——让 AI 分析你的评分偏差，自动生成更准的 DNA</p>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-calibrate">🔬 自动分析我的规律</button>
+      </div>` : '') + records.map(r => {
         const gradeInfo = getGrade(r.totalScore, r.redLineViolation);
         const date = new Date(r.createdAt).toLocaleString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
         const scoreColor = r.redLineViolation ? '#b91c1c' : gradeInfo.color;
         const preview = r.topic.length > 35 ? r.topic.slice(0,35) + '...' : r.topic;
+        const st = getStatusLabel(r);
+        const status = r.status || 'evaluated';
+        let actionsHtml = '';
+        if (status === 'evaluated') {
+          actionsHtml = `<button class="btn btn-ghost btn-sm" data-action="produce" data-id="${r.id}">🎬 标记已制作</button>`;
+        } else if (status === 'produced') {
+          actionsHtml = `<button class="btn btn-secondary btn-sm" data-action="feedback" data-id="${r.id}">📊 填反馈</button>`;
+        } else if (status === 'feedback' && r.feedback) {
+          actionsHtml = `<button class="btn btn-ghost btn-sm" data-action="feedback" data-id="${r.id}">✏️ 改反馈</button>`;
+        }
         return `<div class="history-item" data-id="${r.id}">
           <div class="history-item-left">
             <div class="history-item-topic" title="${escapeHtml(r.topic)}">${escapeHtml(preview)}</div>
-            <div class="history-item-date">${date}</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="history-item-date">${date}</div>
+              <span class="history-status ${st.cls}">${st.text}</span>
+            </div>
+            ${actionsHtml ? '<div class="history-item-actions">' + actionsHtml + '</div>' : ''}
           </div>
           <div class="history-item-right">
             <span class="history-item-score" style="color:${scoreColor}">${r.totalScore}</span>
@@ -781,9 +1371,18 @@ optimizationTips说明：
           </div></div>`;
       }).join('');
 
+      // 绑定校准按钮
+      const calBtn = $('#btn-calibrate');
+      if (calBtn) { calBtn.addEventListener('click', runCalibration); }
+
       historyList.querySelectorAll('.history-item').forEach(item => {
         item.addEventListener('click', function(e) {
-          if (e.target.dataset.action === 'delete') { deleteRecord(e.target.dataset.id); return; }
+          const action = e.target.dataset.action;
+          const id = e.target.dataset.id;
+          if (action === 'delete') { e.stopPropagation(); deleteRecord(id); return; }
+          if (action === 'produce') { e.stopPropagation(); markProduced(id); return; }
+          if (action === 'feedback') { e.stopPropagation(); openFeedbackModal(id); return; }
+          // 点其他区域 → 查看详情
           const record = records.find(r => r.id === this.dataset.id);
           if (record) {
             renderResult({
@@ -808,8 +1407,8 @@ optimizationTips说明：
     // ===== 事件绑定 =====
     function updateCharCount() {
       const len = topicInput.value.length;
-      charCount.textContent = len + ' / 1000';
-      charCount.style.color = len > 900 ? 'var(--danger)' : len > 700 ? 'var(--warning)' : 'var(--text-muted)';
+      charCount.textContent = len + ' / 2000';
+      charCount.style.color = len > 1800 ? 'var(--danger)' : len > 1400 ? 'var(--warning)' : 'var(--text-muted)';
     }
     topicInput.addEventListener('input', updateCharCount);
 
@@ -817,7 +1416,7 @@ optimizationTips说明：
       const key = apiKeyInput.value.trim();
       if (!key) { alert('请输入 API Key'); return; }
       if (!key.startsWith('sk-')) { alert('API Key 格式不正确，应以 sk- 开头'); return; }
-      saveApiKey(key); updateApiUI(); alert('API Key 已保存！');
+      saveApiKey(key); updateApiUI();
     });
     $('#btn-clear-key').addEventListener('click', function() {
       if (!confirm('确定清除保存的 API Key 吗？')) return;
@@ -826,6 +1425,14 @@ optimizationTips说明：
     $('#btn-toggle-key').addEventListener('click', function() {
       apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
       this.textContent = apiKeyInput.type === 'password' ? '👁' : '🙈';
+    });
+    // API Key 收起/展开
+    $('#btn-expand-api').addEventListener('click', function() {
+      $('#api-section').classList.remove('collapsed');
+    });
+    $('#btn-clear-key-collapsed').addEventListener('click', function() {
+      if (!confirm('确定清除 API Key 吗？清除后需重新设置才能评分。')) return;
+      clearApiKey(); updateApiUI();
     });
 
     btnEvaluate.addEventListener('click', async function() {
@@ -839,6 +1446,88 @@ optimizationTips说明：
       btnEvaluate.disabled = false;
       btnEvaluate.textContent = '🤖 AI 自动评分';
       if (result) renderResult(result, topic);
+    });
+
+    // 复制报告
+    $('#btn-copy-report').addEventListener('click', function() {
+      if (!resultSection._currentData) return;
+      const d = resultSection._currentData;
+      const brand = getBrand();
+      const brandName = brand.name || '选题诊断报告';
+      const gradeInfo = getGrade(d.totalScore, d.redLineViolation);
+      const formatName = document.querySelector('input[name="content-format"]:checked');
+      const formatLabel = formatName ? ({'short-video':'短视频','long-video':'长视频','image-text':'图文','livestream':'直播'})[formatName.value] : '—';
+
+      let report = '━━━━━━━━━━━━━━━━━━━━━━\n';
+      report += '  ' + brandName + '\n';
+      report += '━━━━━━━━━━━━━━━━━━━━━━\n\n';
+      report += '📝 选题：' + d.topic.slice(0, 200) + '\n';
+      report += '📹 形式：' + formatLabel + '\n';
+      report += '📊 综合评分：' + d.totalScore + ' 分 · ' + gradeInfo.grade + '\n';
+      if (d.redLineViolation) report += '⚠️ 法律红线触发\n';
+      report += '\n';
+
+      if (d.topicUnderstanding) {
+        report += '🔍 AI 对选题的理解\n' + d.topicUnderstanding + '\n\n';
+      }
+      if (d.backgroundContext) {
+        report += '🧠 背景分析\n' + d.backgroundContext + '\n\n';
+      }
+
+      report += '━━━━ 各维度评分 ━━━━\n';
+      const dims = [
+        { key:'emotion', name:'🔥 情绪的浓烈程度', w:30 },
+        { key:'curiosity', name:'🌀 猎奇程度', w:16 },
+        { key:'cognition', name:'🧠 默认认知程度', w:12 },
+        { key:'resonance', name:'🌐 共鸣广度', w:10 },
+        { key:'complexity', name:'🧩 内容晦涩程度', w:10 },
+        { key:'visual', name:'📸 可视化潜力', w:8 },
+        { key:'algorithm', name:'🤖 平台算法友好度', w:5 },
+        { key:'trend', name:'📡 流行热点关联度', w:5 },
+        { key:'audience', name:'👥 受众规模', w:4 }
+      ];
+      for (const dim of dims) {
+        const sd = d.scores[dim.key];
+        if (sd && typeof sd.score === 'number') {
+          report += dim.name + '（' + dim.w + '%）：' + sd.score + ' 分\n';
+          report += '  ' + (sd.reason || '—') + '\n';
+        }
+      }
+      report += '💰 制作成本（不计分）：' + ((d.scores.cost && d.scores.cost.score) || '—') + '\n\n';
+
+      if (d.optimizationTips && d.optimizationTips.length > 0) {
+        report += '💡 优化建议\n';
+        d.optimizationTips.forEach(t => {
+          report += '· ' + t.dimension + '（' + t.score + '分）：' + t.tip + '\n';
+        });
+        report += '\n';
+      }
+
+      const calEl = $('#calc-breakdown');
+      if (calEl) {
+        report += '📐 计算过程\n' + calEl.textContent.replace(/\s+/g, ' ').trim() + '\n\n';
+      }
+
+      if (brand.contact) {
+        report += '━━━━━━━━━━━━━━━━━━━━━━\n';
+        report += '  📞 ' + brand.contact + '\n';
+        report += '━━━━━━━━━━━━━━━━━━━━━━\n';
+      }
+
+      navigator.clipboard.writeText(report).then(function() {
+        const btn = $('#btn-copy-report');
+        const orig = btn.textContent;
+        btn.textContent = '✅ 已复制';
+        btn.style.background = '#22c55e';
+        btn.style.color = '#fff';
+        setTimeout(function() {
+          btn.textContent = orig;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      }).catch(function() {
+        alert('复制失败，请手动复制');
+      });
     });
 
     $('#btn-save-result').addEventListener('click', function() {
@@ -868,7 +1557,69 @@ optimizationTips说明：
     $('#btn-export').addEventListener('click', exportHistory);
     $('#btn-clear-all').addEventListener('click', clearAllHistory);
 
-    function init() { updateApiUI(); updateCharCount(); renderHistory(); }
+    // DNA 卡片折叠/展开
+    dnaToggle.addEventListener('click', function() {
+      dnaBody.classList.toggle('open');
+      dnaArrow.classList.toggle('open');
+      if (dnaBody.classList.contains('open')) { dnaHot.focus(); }
+    });
+    // 生成 DNA
+    btnGenerateDNA.addEventListener('click', function() {
+      generateDNA();
+    });
+    // 编辑 DNA
+    btnEditDNA.addEventListener('click', function() {
+      dnaPreview.style.display = 'none';
+      btnGenerateDNA.textContent = '🧬 生成 DNA';
+    });
+    // 清除 DNA
+    $('#btn-clear-dna').addEventListener('click', function() {
+      if (!confirm('确定清除账号 DNA 吗？')) return;
+      clearDNA();
+    });
+    // DNA 指南链接
+    dnaGuideLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      alert('🧬 账号 DNA 有什么用？\n\nAI 评分用的是"通用标准"——对所有频道一视同仁。\n但每个频道有自己的规律：有些选题在你的频道就是火不起来，哪怕通用评分很高。\n\n填完 3 个问题 → 生成 DNA → AI 评分时会参照你的真实规律，给更准的判断。\n\n不需要数据分析，不需要写代码，只要你回忆一下哪个火哪个凉。');
+    });
+
+    // 反馈模态框事件
+    $('#btn-cancel-fb').addEventListener('click', closeFeedbackModal);
+    $('#btn-save-fb').addEventListener('click', saveFeedback);
+    feedbackModal.addEventListener('click', function(e) {
+      if (e.target === feedbackModal) closeFeedbackModal();
+    });
+
+    // 侧栏折叠/展开
+    const sidebar = $('#history-sidebar');
+    const sidebarToggleBtn = $('#sidebar-toggle');
+    if (sidebar && sidebarToggleBtn) {
+      sidebarToggleBtn.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        this.textContent = isCollapsed ? '▶' : '◀';
+        this.title = isCollapsed ? '展开历史栏' : '收起历史栏';
+        localStorage.setItem('sidebar-collapsed', isCollapsed ? '1' : '0');
+      });
+      // 恢复上次状态
+      if (localStorage.getItem('sidebar-collapsed') === '1') {
+        sidebar.classList.add('collapsed');
+        sidebarToggleBtn.textContent = '▶';
+        sidebarToggleBtn.title = '展开历史栏';
+      }
+    }
+
+    // 品牌输入自动保存
+    brandNameInput.addEventListener('input', function() { saveBrandName(this.value); });
+    brandContactInput.addEventListener('input', function() { saveBrandContact(this.value); });
+    // CTA 预约按钮
+    $('#btn-cta-book').addEventListener('click', function() {
+      const brand = getBrand();
+      const contact = brand.contact || '请查看报告底部联系方式';
+      alert('📞 预约连麦诊断\n\n' + contact + '\n\n将你评分最低的选题链接发过来，我会在 24 小时内回复。');
+    });
+
+    function init() { updateApiUI(); updateBrandUI(); updateDNAUI(); updateCharCount(); renderHistory(); }
     init();
   })();
   </script>
