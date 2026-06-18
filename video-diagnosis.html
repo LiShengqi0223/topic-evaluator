@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频四维诊断 · 内容手术刀</title>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    /* ===== CSS 变量（与主工具统一主题） ===== */
+    :root {
+      --primary: #7c5cbf;
+      --primary-dark: #5a3d96;
+      --primary-light: #e8dff5;
+      --bg: #f8f5ff;
+      --card: #ffffff;
+      --border: #d4c8e8;
+      --text: #1a1a2e;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ===== 布局 ===== */
+    .page-header { text-align: center; padding: 48px 24px 20px; }
+    .page-title { font-size: 28px; font-weight: 700; color: var(--primary-dark); }
+    .page-subtitle { font-size: 15px; color: var(--text-secondary); margin-top: 6px; }
+    .main-container { max-width: 680px; margin: 0 auto; padding: 0 24px 60px; }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .section-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+
+    /* ===== API Key（紧凑版） ===== */
+    .api-bar {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      background: #faf8ff; border-radius: var(--radius-sm); border: 1px solid var(--primary-light);
+      font-size: 13px; margin-bottom: 8px; flex-wrap: wrap;
+    }
+    .api-bar .api-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .api-bar .api-status-dot.set { background: var(--success); }
+    .api-bar .api-status-dot.unset { background: var(--danger); }
+    .api-bar input {
+      flex: 1; min-width: 180px; padding: 6px 10px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; outline: none;
+    }
+    .api-bar input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+
+    /* ===== 输入区 ===== */
+    .input-textarea {
+      width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 15px; font-family: inherit; resize: vertical; outline: none;
+      transition: border 0.2s; line-height: 1.6; min-height: 140px;
+    }
+    .input-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .input-url {
+      width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: inherit; outline: none; margin-top: 10px;
+    }
+    .input-url:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .char-count { font-size: 13px; color: var(--text-muted); }
+
+    /* ===== 按钮 ===== */
+    .btn {
+      padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-size: 15px;
+      font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-secondary:hover:not(:disabled) { background: var(--primary-light); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover:not(:disabled) { background: #f3f4f6; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-diagnose {
+      padding: 12px 28px; font-size: 16px; font-weight: 600;
+      background: var(--primary); color: #fff; border-radius: var(--radius-sm);
+      border: none; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .btn-diagnose:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+    /* ===== 加载 ===== */
+    .loading-section {
+      display: none; padding: 32px 24px; text-align: center;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); margin-bottom: 20px; box-shadow: var(--shadow-sm);
+    }
+    .loading-section.active { display: block; }
+    .loading-spinner { margin: 0 auto; width: 36px; height: 36px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loading-text { margin-top: 12px; font-size: 15px; color: var(--text-secondary); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== 错误 ===== */
+    .error-section {
+      display: none; padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: var(--radius-md); color: var(--danger); margin-bottom: 20px; font-size: 14px;
+    }
+    .error-section.active { display: block; }
+
+    /* ===== 结果区 ===== */
+    .result-section { display: none; }
+    .result-section.active { display: block; }
+
+    /* 总览横幅 */
+    .result-banner {
+      padding: 24px; border-radius: var(--radius-md); margin-bottom: 20px;
+      text-align: center; border-left: 4px solid var(--primary);
+      background: #faf8ff;
+    }
+    .result-banner .verdict { font-size: 22px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+    .result-banner .verdict-sub { font-size: 14px; color: var(--text-secondary); }
+
+    /* 四维卡片 */
+    .dim-cards { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .dim-card {
+      padding: 18px 20px; border-radius: var(--radius-md); border-left: 5px solid;
+      background: #fafafa; transition: all 0.2s;
+    }
+    .dim-card:hover { background: #f5f5f5; }
+    .dim-card.dim-attention { border-left-color: #ef4444; }
+    .dim-card.dim-comprehension { border-left-color: #3b82f6; }
+    .dim-card.dim-persuasion { border-left-color: #f59e0b; }
+    .dim-card.dim-spread { border-left-color: #8b5cf6; }
+
+    /* 格式选择器 */
+    .format-selector {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 14px; padding: 10px 14px;
+      background: #faf8ff; border-radius: var(--radius-sm); border: 1px solid var(--primary-light);
+    }
+    .format-label { font-size: 14px; font-weight: 600; color: var(--primary-dark); white-space: nowrap; }
+    .format-selector label {
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+      color: var(--text-secondary); transition: color 0.2s;
+    }
+    .format-selector label:hover { color: var(--primary); }
+    .format-selector input[type="radio"] { accent-color: var(--primary); }
+    .format-selector input[type="radio"]:checked + span { color: var(--primary); font-weight: 600; }
+    .weight-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* 钩子专用输入 */
+    .hook-input-row {
+      margin-bottom: 14px; padding: 14px 16px;
+      background: #fffbf0; border: 1px solid #fde68a;
+      border-radius: var(--radius-sm);
+    }
+    .hook-label { display: block; font-size: 14px; font-weight: 600; color: #92400e; margin-bottom: 6px; }
+    .hook-input {
+      width: 100%; padding: 10px 14px; border: 2px solid #fde68a; border-radius: var(--radius-sm);
+      font-size: 15px; font-family: inherit; outline: none; transition: border 0.2s;
+    }
+    .hook-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+    .hook-input::placeholder { color: var(--text-muted); font-style: italic; }
+    .hook-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .dim-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .dim-card-name { font-weight: 600; font-size: 15px; }
+    .dim-card-score { font-weight: 700; font-size: 24px; }
+    .dim-card-bar-wrap { height: 5px; background: #e5e7eb; border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
+    .dim-card-bar { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .dim-card-diagnosis { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+    .dim-card-diagnosis strong { color: var(--text); }
+
+    /* 操作按钮 */
+    .result-actions { display: none; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .result-actions .btn { flex: 1; min-width: 140px; justify-content: center; display: flex; align-items: center; gap: 4px; }
+
+    /* 痛点汇总 */
+    .pain-summary {
+      padding: 18px 20px; background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: var(--radius-md); margin-bottom: 20px;
+    }
+    .pain-summary h4 { font-size: 15px; color: #92400e; margin-bottom: 8px; }
+    .pain-summary ul { list-style: none; padding: 0; }
+    .pain-summary li { font-size: 14px; color: var(--text-secondary); line-height: 1.8; padding-left: 16px; position: relative; }
+    .pain-summary li::before { content: "→"; position: absolute; left: 0; color: #f59e0b; font-weight: 600; }
+
+    /* CTA */
+    .cta-card {
+      text-align: center; padding: 28px 24px;
+      background: linear-gradient(135deg, var(--primary-light), #ede9fe);
+      border-radius: var(--radius-lg); border: 1px solid var(--border);
+    }
+    .cta-card h3 { font-size: 18px; font-weight: 600; color: var(--primary-dark); margin-bottom: 6px; }
+    .cta-card p { font-size: 14px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.7; }
+    .cta-card .btn { font-size: 16px; padding: 12px 28px; }
+    .cta-divider { text-align: center; margin: 24px 0; font-size: 13px; color: var(--text-muted); }
+    .cta-divider::before, .cta-divider::after { content: " ——— "; color: var(--border); }
+
+    /* ===== 历史记录 ===== */
+    .history-section { margin-top: 8px; }
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-empty { text-align: center; color: var(--text-muted); padding: 20px; font-size: 14px; }
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
+      cursor: pointer; transition: all 0.15s; gap: 12px;
+    }
+    .history-item:hover { background: var(--primary-light); border-color: var(--primary); }
+    .history-item-left { flex: 1; min-width: 0; }
+    .history-item-title { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .history-item-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .history-item-badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px;
+      background: var(--primary-light); color: var(--primary-dark); white-space: nowrap;
+    }
+    .history-item-delete {
+      width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent;
+      color: var(--text-muted); cursor: pointer; font-size: 15px; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .history-item-delete:hover { background: #fef2f2; color: var(--danger); }
+
+    /* ===== 预约弹窗 ===== */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card); border-radius: var(--radius-lg); padding: 32px 28px;
+      max-width: 380px; width: 90%; box-shadow: var(--shadow-lg);
+      text-align: center; position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 12px; right: 16px;
+      font-size: 24px; color: var(--text-muted); cursor: pointer;
+      line-height: 1; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .modal-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+    .qr-section { padding: 20px; background: #fafafa; border-radius: var(--radius-md); }
+    .qr-image { display: block; margin: 0 auto 12px; border-radius: 8px; width: 200px; height: 200px; }
+    .qr-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+    .qr-wechat-id { font-size: 15px; color: var(--text); }
+
+    /* ===== 页脚 ===== */
+    .page-footer { text-align: center; padding: 0 24px 40px; color: var(--text-muted); font-size: 13px; }
+    .page-footer a { color: var(--primary); text-decoration: none; }
+    .page-footer a:hover { text-decoration: underline; }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 640px) {
+      .page-title { font-size: 22px; }
+      .main-container { padding: 0 12px 40px; }
+      .card { padding: 16px; }
+      .api-bar { flex-direction: column; align-items: stretch; }
+      .dim-card-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <h1 class="page-title">🔪 视频内容 · 四维诊断</h1>
+    <p class="page-subtitle">把你的视频脚本/选题扔进来，AI 告诉你哪里最致命</p>
+  </header>
+
+  <main class="main-container">
+
+    <!-- ===== API Key（共享主工具的 Key） ===== -->
+    <div class="api-bar" id="api-bar">
+      <span class="api-status-dot unset" id="api-dot"></span>
+      <span id="api-label" style="font-size:13px;">API Key 未设置</span>
+      <input type="password" id="api-key-input" placeholder="sk-xxxxxxxx（与选题评价助手共用）" autocomplete="off" style="display:none;">
+      <button type="button" class="btn btn-sm btn-secondary" id="btn-api-action">设置 Key</button>
+    </div>
+
+    <!-- ===== 输入卡片 ===== -->
+    <section class="card">
+      <h2 class="section-title">📝 放入你要诊断的内容</h2>
+      <p class="section-hint">把视频脚本、选题大纲、或你正在纠结的几条文案粘贴进来。越具体，诊断越锋利。</p>
+      <div class="format-selector">
+        <span class="format-label">内容类型：</span>
+        <label><input type="radio" name="content-type" value="verbal" checked><span>口播型</span></label>
+        <label><input type="radio" name="content-type" value="scene"><span>场景型</span></label>
+        <label><input type="radio" name="content-type" value="hybrid"><span>混合型</span></label>
+      </div>
+      <p class="weight-hint" style="margin-bottom:10px;" id="content-type-hint">口播型：钩子是文字。诊断标准 = 句式是否精确、是否制造了信息缺口。</p>
+      <div class="format-selector">
+        <span class="format-label">视频时长：</span>
+        <label><input type="radio" name="video-format" value="ultra-short" checked><span>≤90秒</span></label>
+        <label><input type="radio" name="video-format" value="short"><span>90秒-3分钟</span></label>
+        <label><input type="radio" name="video-format" value="medium"><span>3-5分钟</span></label>
+        <label><input type="radio" name="video-format" value="long"><span>≥5分钟</span></label>
+      </div>
+      <p class="weight-hint" id="weight-hint"></p>
+      <div class="hook-input-row" id="hook-input-row">
+        <label class="hook-label" for="hook-input">🎣 你的钩子（视频前 3-5 秒的文字稿）：</label>
+        <input type="text" class="hook-input" id="hook-input"
+          placeholder="一字不差地写出你视频开口前 3-5 秒说的那句话。比如：'上个月我给一个百万博主改了一条90秒的视频，播放量从2万跳到40万——只改了一句话。'"
+          maxlength="200">
+        <p class="hook-hint" id="hook-hint">写不出来？那你的钩子大概率是模糊的。AI 帮你诊断的前提是你先把自己的钩子看清楚了。</p>
+      </div>
+      <textarea class="input-textarea" id="content-input" rows="6"
+        placeholder="比如：我想做一期关于"年轻人开始用现金"的视频。开头是一个街头采访问路人上次用现金是什么时候，中间对比现金生活 vs 电子支付的不同体验，结尾引出"当你的一切消费都被算法推荐时，现金是你最后的隐私"……"
+        maxlength="3000"></textarea>
+      <input type="url" class="input-url" id="url-input" placeholder="🔗 视频链接（选填，如果你已经发布了）">
+      <div class="input-footer">
+        <span class="char-count" id="char-count">0 / 3000</span>
+        <button type="button" class="btn-diagnose" id="btn-diagnose" disabled>🔪 开始诊断</button>
+      </div>
+    </section>
+
+    <!-- ===== 错误 ===== -->
+    <div class="error-section" id="error-section"><span id="error-message"></span></div>
+
+    <!-- ===== 加载 ===== -->
+    <div class="loading-section" id="loading-section">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">AI 正在逐维度诊断你的内容……</p>
+    </div>
+
+    <!-- ===== 诊断结果 ===== -->
+    <section class="card result-section" id="result-section">
+      <!-- 总览 -->
+      <div class="result-banner" id="result-banner">
+        <div class="verdict" id="result-verdict"></div>
+        <div class="verdict-sub" id="result-verdict-sub"></div>
+      </div>
+
+      <!-- 四维卡片 -->
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:10px;">📋 四维诊断详情</h3>
+      <div class="dim-cards" id="dim-cards"></div>
+
+      <!-- 痛点汇总 -->
+      <div class="pain-summary" id="pain-summary"></div>
+
+      <!-- 操作按钮 -->
+      <div class="result-actions" id="result-actions">
+        <button type="button" class="btn btn-secondary" id="btn-save-report">💾 保存报告</button>
+        <button type="button" class="btn btn-primary" id="btn-export-image">📸 导出图片</button>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-divider">诊断到这里，你知道问题在哪了</div>
+      <div class="cta-card">
+        <h3>🔧 但知道问题和修好它是两回事</h3>
+        <p>带着这份诊断来找我，30 分钟帮你找到<br>那条你一个人永远想不出来的改法</p>
+        <button type="button" class="btn btn-primary" id="btn-book" onclick="var q=document.getElementById('qr-inline');q.style.display=q.style.display==='none'?'block':'none'">✋ 预约 1v1 诊断</button>
+        <div class="qr-inline" id="qr-inline" style="display:none;margin-top:16px;padding:16px;background:#fafafa;border-radius:12px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=limola94" alt="微信二维码" style="display:block;margin:0 auto 12px;border-radius:8px;width:180px;height:180px;">
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:4px;">微信扫码添加</p>
+          <p style="font-size:15px;font-weight:600;">微信号：limola94</p>
+        </div>
+      </div>
+
+      <!-- 重新诊断 -->
+      <div style="text-align:center;margin-top:16px;">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-new-diagnosis">🔄 重新诊断</button>
+      </div>
+    </section>
+
+    <!-- ===== 已保存的历史诊断 ===== -->
+    <section class="card history-section" id="history-section">
+      <h2 class="section-title">📊 已保存的诊断报告</h2>
+      <p class="section-hint">每次诊断后点击"保存报告"会出现在这里。点击可回看详情。</p>
+      <div class="history-list" id="history-list">
+        <p class="history-empty" id="history-empty">还没有保存的报告，去诊断一个吧 🔪</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="page-footer">
+    <p>所有数据仅存储在本地浏览器 · 不会上传到任何服务器</p>
+    <p><a href="index.html">← 回选题评价助手</a></p>
+  </footer>
+
+  <script>
+  (function() {
+    'use strict';
+
+    const $ = (sel) => document.querySelector(sel);
+
+    // ===== DOM 引用 =====
+    const apiDot = $('#api-dot');
+    const apiLabel = $('#api-label');
+    const apiKeyInput = $('#api-key-input');
+    const btnApiAction = $('#btn-api-action');
+    const contentInput = $('#content-input');
+    const hookInput = $('#hook-input');
+    const urlInput = $('#url-input');
+    const charCount = $('#char-count');
+    const btnDiagnose = $('#btn-diagnose');
+    const loadingSection = $('#loading-section');
+    const errorSection = $('#error-section');
+    const errorMessage = $('#error-message');
+    const resultSection = $('#result-section');
+    const resultVerdict = $('#result-verdict');
+    const resultVerdictSub = $('#result-verdict-sub');
+    const dimCards = $('#dim-cards');
+    const painSummary = $('#pain-summary');
+    const btnBook = $('#btn-book');
+    const weightHint = $('#weight-hint');
+    const btnSaveReport = $('#btn-save-report');
+    const btnExportImage = $('#btn-export-image');
+    const resultActions = $('#result-actions');
+    const historyList = $('#history-list');
+    const historyEmpty = $('#history-empty');
+    const contentTypeHint = $('#content-type-hint');
+
+    // ===== 常量 =====
+    const DEEPSEEK_API = 'https://api.deepseek.com/v1/chat/completions';
+    const MIN_CHARS = 40;
+
+    // 四维定义（骨骼相同，权重因形式而异）
+    const DIMENSIONS = [
+      { key: 'attention',      name: '🎣 注意力',   color: '#ef4444', desc: '前3秒钩子是否精确——钩子不精确，视频就死了' },
+      { key: 'comprehension',  name: '🧱 理解力',   color: '#3b82f6', desc: '信息架构是否让观众能轻松跟完全程' },
+      { key: 'persuasion',     name: '💼 说服力',   color: '#f59e0b', desc: '每一秒在积累信任还是在消耗信任' },
+      { key: 'spread',         name: '📡 传播力',   color: '#8b5cf6', desc: '能被截图的句子、结尾弹药、转发理由' }
+    ];
+
+    // 权重表（四档）
+    const WEIGHTS = {
+      'ultra-short': { attention: 70, comprehension: 15, persuasion: 10, spread: 5 },
+      'short':       { attention: 50, comprehension: 30, persuasion: 15, spread: 5 },
+      'medium':      { attention: 30, comprehension: 40, persuasion: 20, spread: 10 },
+      'long':        { attention: 20, comprehension: 40, persuasion: 25, spread: 15 }
+    };
+
+    const FORMAT_LABELS = {
+      'ultra-short': '≤90秒',
+      'short':       '90秒-3分钟',
+      'medium':      '3-5分钟',
+      'long':        '≥5分钟'
+    };
+
+    // 每档核心规则（显示在 prompt 里）
+    const FORMAT_RULES = {
+      'ultra-short': `≤90秒：一条视频赌钩子。观点0.5个——只给钩子，不给展开。例子0或1个。钩子不精确=死了。最强层=注意力，最弱层=传播力（没人转发90秒视频）。`,
+      'short':       `90秒-3分钟：中间时长，最难做。短了靠钩子，长了靠节律，这段既不能纯靠钩子撑，又没时间铺节律。核心规则：一条视频只能背一个观点。一个观点只配一个例子。例子必须是通识——不能是需要前置知识的例子。观点太多=观众跟丢。最强层=注意力+理解力各半。`,
+      'medium':      `3-5分钟：理解力最容易塌的区间。核心规则：两个观点——但必须是同一个结论的两面，不是两个不同结论。两个例子——一个通识例子拉共鸣，一个稍深例子展示专业度。节奏=一个观点→一个例子→一句话总结→下一个观点。例子不够=观众在2分钟处走了。例子太多=观众忘了你在讲什么。最强层=理解力。`,
+      'long':        `≥5分钟：赌体系。3个观点（一个体系），3-5个例子。钩子决定进不进来，理解力决定中不中途离开，说服力决定关不关注，传播力决定转不转发。核心风险=信息架构塌了→前功尽弃。最难的不是钩子——是中间5分钟一个例子接一个例子的节律。最强层=理解力+说服力。`
+    };
+
+    // 内容类型配置
+    const CONTENT_TYPES = {
+      verbal: {
+        name: '口播型',
+        hint: '口播型：钩子是文字。诊断标准 = 句式是否精确、是否制造了信息缺口。',
+        hookLabel: '🎣 你的钩子（视频前 3-5 秒的文字稿）：',
+        hookPlaceholder: '一字不差地写出你视频开口前3-5秒说的那句话。比如：\'上个月我给一个百万博主改了一条90秒的视频，播放量从2万跳到40万——只改了一句话。\'',
+        contentHint: '把脚本、文案、口播稿粘贴进来',
+        diagnosisNote: '这是口播型内容。注意力评判标准：文字钩子是否精确。理解力评判标准：信息架构是否清晰。说服力评判标准：身份锚定和论证质量。'
+      },
+      scene: {
+        name: '场景型',
+        hint: '场景型：钩子是画面。诊断标准 = 画面张力、悬念感、视觉反差。',
+        hookLabel: '🎣 你的钩子（视频前 3-5 秒的画面描述）：',
+        hookPlaceholder: '描述前3-5秒观众看到的画面。比如：\'女孩走到男生面前，把手机屏幕亮给他看——上面是另一个男生的聊天记录。男生表情从笑变成僵住。全程没有一句话。\'',
+        contentHint: '描述视频的场景、人物、动作、情绪变化。文字稿可有可无。',
+        diagnosisNote: '这是场景型内容（如情侣号、挑战、默剧、vlog）。注意力评判标准：画面张力——前3秒的画面能不能让人停下。不要让AI用"文字钩子是否精确"的标准去判一个没有文字钩子的内容。理解力评判标准：视觉叙事是否清晰——没有台词观众能不能看懂。说服力评判标准：场景是否真实自然、不尬。传播力评判标准：画面本身能不能被截图/被模仿/被复刻。'
+      },
+      hybrid: {
+        name: '混合型',
+        hint: '混合型：文字+画面双钩子。两者都要判。',
+        hookLabel: '🎣 你的钩子（前 3-5 秒）：花 1-2 句描述画面 + 台词',
+        hookPlaceholder: '同时写出画面和台词。比如：\'画面：一个空荡的会议室，只有我和甲方两个人。台词："你们上次那个方案，我们内部讨论了一下——"然后他停了5秒没说话。\'',
+        contentHint: '把脚本+场景描述一起粘贴进来',
+        diagnosisNote: '这是混合型内容。注意力评判标准：文字钩子和画面张力两者都要判。缺一不可。'
+      }
+    };
+
+    function getContentType() {
+      const sel = document.querySelector('input[name="content-type"]:checked');
+      return sel ? sel.value : 'verbal';
+    }
+
+    function updateContentTypeUI() {
+      const type = CONTENT_TYPES[getContentType()];
+      contentTypeHint.textContent = type.hint;
+      const lbl = document.querySelector('.hook-label');
+      if (lbl) lbl.textContent = type.hookLabel;
+      hookInput.placeholder = type.hookPlaceholder;
+      const hint = document.querySelector('.section-hint');
+      if (hint) hint.textContent = type.contentHint + '。越具体，诊断越锋利。';
+    }
+
+    function getFormatInfo() {
+      const fmt = document.querySelector('input[name="video-format"]:checked');
+      const format = fmt ? fmt.value : 'ultra-short';
+      return {
+        format,
+        label: FORMAT_LABELS[format],
+        weights: WEIGHTS[format],
+        rule: FORMAT_RULES[format]
+      };
+    }
+
+    function updateWeightHint() {
+      const { label, weights } = getFormatInfo();
+      const w = weights;
+      weightHint.textContent = label + ' · 权重：注意力 ' + w.attention + '% / 理解力 ' + w.comprehension + '% / 说服力 ' + w.persuasion + '% / 传播力 ' + w.spread + '%';
+    }
+
+    // ===== API Key 管理（共享主工具的 Key） =====
+    function getApiKey() { return localStorage.getItem('deepseek-api-key') || ''; }
+    function saveApiKey(key) { localStorage.setItem('deepseek-api-key', key.trim()); }
+    function updateApiUI() {
+      const key = getApiKey();
+      if (key) {
+        apiDot.className = 'api-status-dot set';
+        apiLabel.textContent = '✅ Key 已就绪';
+        apiKeyInput.style.display = 'none';
+        btnApiAction.textContent = '更换';
+        btnApiAction.className = 'btn btn-sm btn-ghost';
+        btnDiagnose.disabled = false;
+      } else {
+        apiDot.className = 'api-status-dot unset';
+        apiLabel.textContent = '需要 API Key 才能诊断';
+        apiKeyInput.style.display = 'inline-block';
+        btnApiAction.textContent = '保存 Key';
+        btnApiAction.className = 'btn btn-sm btn-primary';
+        btnDiagnose.disabled = true;
+      }
+    }
+
+    // ===== 品牌/联系方式 =====
+    function getContact() {
+      return localStorage.getItem('brand-contact') || localStorage.getItem('brand-name') || '';
+    }
+
+    // ===== 错误/加载 =====
+    function showError(msg) { errorMessage.textContent = msg; errorSection.classList.add('active'); loadingSection.classList.remove('active'); }
+    function hideError() { errorSection.classList.remove('active'); }
+
+    // ===== 调用 AI =====
+    async function runDiagnosis(content, hook, url) {
+      const apiKey = getApiKey();
+      if (!apiKey) { showError('请先设置 API Key'); return null; }
+
+      loadingSection.classList.add('active');
+      resultSection.classList.remove('active');
+      resultActions.style.display = 'none';
+      hideError();
+
+      const { format, label, weights, rule } = getFormatInfo();
+      const contentType = CONTENT_TYPES[getContentType()];
+
+      const systemPrompt = `你是一个锋利、不留情面的视频内容诊断专家。你用"四层框架"诊断用户提交的视频内容。
+
+当前视频时长：${label}
+权重：注意力${weights.attention}% / 理解力${weights.comprehension}% / 说服力${weights.persuasion}% / 传播力${weights.spread}%
+
+${rule}
+
+⚠️ ${contentType.diagnosisNote}
+
+## 四层诊断标准
+
+### 第一层：注意力（权重${weights.attention}%）
+用户会在"我的钩子"字段中单独给出他写的钩子。这就是他要你诊断的东西。
+- 直接评价这个钩子：精确还是模糊？有没有制造信息缺口？能不能一句话被记住？
+- 如果"我的钩子"是空的，在 diagnosis 中一针见血地指出来："你没有写出你的钩子——这本身就是个问题。如果你自己都讲不清楚前3秒在说什么，观众更不会知道。"
+- 如果"我的钩子"写的是一个万能句（如"你知道吗""今天聊聊""最近有个现象"），直接说这是万能句，能套在任何视频上
+- ⚠️ 草稿检测：如果钩子明显是半句话或没写完，标注出来，不给完整评分
+
+### 第二层：理解力（权重${weights.comprehension}%）
+判断标准：这个时长下，观点数量是否匹配？例子数量是否匹配？例子和抽象观点之间的节律对不对？例子太密观众累，例子太少观众走。具体判断时请对照该时长的核心规则（上面已给出）。
+
+### 第三层：说服力（权重${weights.persuasion}%）
+判断标准：这个时长下，信任是如何建立的？是靠身份锚定（短时长），还是靠逐秒积累的真实例子和数据（长时长）？每一秒在积累信任还是消耗信任？具体判断时请对照该时长的核心规则（上面已给出）。
+
+### 第四层：传播力（权重${weights.spread}%）
+判断标准：这个时长下，观众转发/截图的理由是什么？短时长看钩子本身有没有被截图的潜力，长时长看中间有没有一句能被截的句子、结尾有没有弹药。具体判断时请对照该时长的核心规则（上面已给出）。
+
+## 评分要求
+- 每个维度给 0-100 分。诊断要锋利、具体，直接指出"哪里不行"
+- 表述具体，如"前3秒你说'最近有个现象很有意思'——这句话能套在任何视频上，观众在第3秒就划走了"
+- 时效标准参照该时长的核心规则：观点数对吗？例子数对吗？节律对吗？
+- 先判断完整性，再打分：草稿状态明确标注，不假装残缺内容是完整的
+- 如果信息不足以判断某一层，诚实说"当前信息不足以判断这一项"并给出有限信息下的判断
+
+**重要：请以 JSON 格式返回，不要加代码块标记。**
+{
+  "verdict": "一句话总结这个内容最致命的问题（不超过25字，要锋利）",
+  "verdictSub": "一句话补充说明这个内容的潜力在哪（不超过30字）",
+  "scores": {
+    "attention": {"score": 65, "diagnosis": "具体的、不留情面的诊断。指出具体哪里不行。"},
+    "comprehension": {"score": 70, "diagnosis": "同上"},
+    "persuasion": {"score": 55, "diagnosis": "同上"},
+    "spread": {"score": 80, "diagnosis": "同上"}
+  },
+  "painPoints": ["最致命的1-3个问题，每条不超过25字，要具体不要空泛"],
+  "uncertaintyNote": "如果有信息不足无法判断的部分，在这里说明。如果信息足够，此项为null。"
+}`;
+
+      const hookPart = hook
+        ? '我的钩子（视频前3-5秒的文字稿）：\n' + hook + '\n\n'
+        : '我的钩子：用户未填写。\n\n';
+      const userMessage = hookPart + '完整内容：\n' + content + (url ? '\n\n已发布链接（仅供参考画面和最终效果）：' + url : '');
+
+      try {
+        const response = await fetch(DEEPSEEK_API, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role:'system', content: systemPrompt },
+              { role:'user', content: userMessage }
+            ],
+            temperature: 0.3,
+            max_tokens: 2000,
+            response_format: { type:'json_object' }
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          if (response.status === 401) throw new Error('API Key 无效，请重新设置');
+          if (response.status === 429) throw new Error('请求太频繁，稍等再试');
+          throw new Error(errData.error?.message || 'API 请求失败（' + response.status + '）');
+        }
+
+        const data = await response.json();
+        const content_resp = data.choices?.[0]?.message?.content;
+        if (!content_resp) throw new Error('AI 返回为空，请重试');
+
+        let parsed;
+        try {
+          parsed = JSON.parse(content_resp);
+        } catch (e) {
+          const cleaned = content_resp.replace(/^```(?:json)?\s*\n?/i,'').replace(/\n?\s*```$/i,'');
+          parsed = JSON.parse(cleaned);
+        }
+
+        if (!parsed.scores) throw new Error('AI 返回格式异常，请重试');
+        return parsed;
+
+      } catch (err) {
+        hideLoading_();
+        if (err.name === 'TypeError' && err.message.includes('fetch')) {
+          showError('网络连接失败，请检查网络后重试');
+        } else {
+          showError(err.message || '诊断过程出错，请重试');
+        }
+        return null;
+      }
+    }
+
+    function hideLoading_() { loadingSection.classList.remove('active'); }
+
+    // ===== 渲染结果 =====
+    function renderResult(data) {
+      const { weights } = getFormatInfo();
+      loadingSection.classList.remove('active');
+      resultSection.classList.add('active');
+
+      // 总览
+      resultVerdict.textContent = '🔪 ' + (data.verdict || '诊断完成');
+      resultVerdictSub.textContent = data.verdictSub || '';
+
+      // 四维卡片
+      dimCards.innerHTML = '';
+      for (const dim of DIMENSIONS) {
+        const dimData = data.scores[dim.key];
+        if (!dimData) continue;
+        const score = dimData.score || 0;
+        const diagnosis = dimData.diagnosis || '—';
+        const scoreColor = score < 50 ? '#ef4444' : score < 75 ? '#f59e0b' : '#22c55e';
+        const w = weights[dim.key];
+
+        const card = document.createElement('div');
+        card.className = 'dim-card dim-' + dim.key;
+        card.innerHTML = `
+          <div class="dim-card-header">
+            <span class="dim-card-name">${dim.name} <span style="font-weight:400;font-size:12px;color:var(--text-muted);">权重 ${w}% · ${dim.desc}</span></span>
+            <span class="dim-card-score" style="color:${scoreColor}">${score}</span>
+          </div>
+          <div class="dim-card-bar-wrap">
+            <div class="dim-card-bar" style="width:${score}%; background:${scoreColor};"></div>
+          </div>
+          <div class="dim-card-diagnosis">${diagnosis}</div>
+        `;
+        dimCards.appendChild(card);
+      }
+
+      // 不确定性提示
+      if (data.uncertaintyNote) {
+        const note = document.createElement('div');
+        note.style.cssText = 'padding:10px 14px;background:#f3f4f6;border-radius:8px;font-size:13px;color:var(--text-secondary);margin-bottom:12px;';
+        note.textContent = '⚠️ ' + data.uncertaintyNote;
+        dimCards.appendChild(note);
+      }
+
+      // 痛点汇总
+      if (data.painPoints && data.painPoints.length > 0) {
+        painSummary.innerHTML = '<h4>🩸 最致命的问题</h4><ul>' +
+          data.painPoints.map(p => '<li>' + escapeHtml_(p) + '</li>').join('') +
+          '</ul>';
+        painSummary.style.display = 'block';
+      } else {
+        painSummary.style.display = 'none';
+      }
+
+      // 存当前数据供保存/导出使用
+      const { format, label } = getFormatInfo();
+      const ct = getContentType();
+      resultSection._currentData = {
+        hook: hookInput.value.trim(),
+        content: contentInput.value.trim(),
+        url: urlInput.value.trim(),
+        format: label,
+        contentType: CONTENT_TYPES[ct].name,
+        verdict: data.verdict,
+        verdictSub: data.verdictSub,
+        scores: data.scores,
+        painPoints: data.painPoints
+      };
+
+      // 滚动到结果
+      resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultActions.style.display = 'flex';
+    }
+
+    function escapeHtml_(str) {
+      const div = document.createElement('div'); div.textContent = str; return div.innerHTML;
+    }
+
+    // ===== 保存报告 =====
+    function saveReport() {
+      if (!resultSection._currentData) return;
+      const d = resultSection._currentData;
+      const records = JSON.parse(localStorage.getItem('video-diagnoses') || '[]');
+      records.unshift({
+        id: Date.now().toString(),
+        hook: d.hook,
+        content: d.content.slice(0, 300),
+        url: d.url,
+        format: d.format,
+        contentType: d.contentType,
+        verdict: d.verdict,
+        verdictSub: d.verdictSub,
+        scores: d.scores,
+        painPoints: d.painPoints,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('video-diagnoses', JSON.stringify(records));
+      renderHistory();
+      const btn = btnSaveReport;
+      const orig = btn.textContent;
+      btn.textContent = '✅ 已保存';
+      btn.style.background = '#22c55e';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#22c55e';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 1500);
+    }
+
+    // ===== 历史报告列表 =====
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem('video-diagnoses') || '[]'); }
+      catch(e) { return []; }
+    }
+
+    function renderHistory() {
+      const records = loadHistory();
+      if (records.length === 0) {
+        historyList.innerHTML = '<p class="history-empty" id="history-empty">还没有保存的报告，去诊断一个吧 🔪</p>';
+        return;
+      }
+      historyList.innerHTML = records.map(r => {
+        const date = new Date(r.createdAt).toLocaleString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        const hookPreview = r.hook ? r.hook.slice(0, 30) : '未填写钩子';
+        const fmt = r.format || '';
+        return `<div class="history-item" data-id="${r.id}">
+          <div class="history-item-left">
+            <div class="history-item-title">🎣 ${escapeHtml_(hookPreview + (r.hook && r.hook.length > 30 ? '…' : ''))}</div>
+            <div class="history-item-meta">${date} · ${escapeHtml_(r.contentType || '')} · ${escapeHtml_(fmt)} · ${escapeHtml_(r.verdict || '')}</div>
+          </div>
+          <div class="history-item-right">
+            <span class="history-item-badge">${fmt}</span>
+            <button class="history-item-delete" data-action="delete" data-id="${r.id}">×</button>
+          </div></div>`;
+      }).join('');
+
+      // 绑定点击事件
+      historyList.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+          if (e.target.dataset.action === 'delete') {
+            e.stopPropagation();
+            deleteHistoryItem(e.target.dataset.id);
+            return;
+          }
+          const record = records.find(r => r.id === this.dataset.id);
+          if (record) viewHistoryRecord(record);
+        });
+      });
+    }
+
+    function viewHistoryRecord(record) {
+      // 回填内容到输入框
+      contentInput.value = record.content || '';
+      hookInput.value = record.hook || '';
+      urlInput.value = record.url || '';
+      charCount.textContent = (record.content || '').length + ' / 3000';
+      // 渲染结果
+      resultSection._currentData = {
+        hook: record.hook,
+        content: record.content,
+        url: record.url,
+        format: record.format,
+        contentType: record.contentType,
+        verdict: record.verdict,
+        verdictSub: record.verdictSub,
+        scores: record.scores,
+        painPoints: record.painPoints
+      };
+      renderResult({
+        verdict: record.verdict,
+        verdictSub: record.verdictSub,
+        scores: record.scores,
+        painPoints: record.painPoints
+      });
+    }
+
+    function deleteHistoryItem(id) {
+      const records = loadHistory();
+      const idx = records.findIndex(r => r.id === id);
+      if (idx < 0) return;
+      const deleted = records.splice(idx, 1)[0];
+      localStorage.setItem('video-diagnoses', JSON.stringify(records));
+      renderHistory();
+
+      // 清除旧的撤回提示
+      const oldBar = document.getElementById('undo-bar');
+      if (oldBar) oldBar.remove();
+      // 撤回提示
+      const undoBar = document.createElement('div');
+      undoBar.id = 'undo-bar';
+      undoBar.style.cssText = 'padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
+      undoBar.innerHTML = '<span>🗑 已删除「' + escapeHtml_((deleted.hook || '未命名').slice(0, 20)) + '」</span><button class="btn btn-sm btn-ghost" id="btn-undo-del">↩ 撤回</button>';
+      historyList.insertBefore(undoBar, historyList.firstChild);
+      $('#btn-undo-del').addEventListener('click', function() {
+        const cur = loadHistory();
+        cur.unshift(deleted);
+        localStorage.setItem('video-diagnoses', JSON.stringify(cur));
+        renderHistory();
+      });
+      setTimeout(() => {
+        const bar = document.getElementById('undo-bar');
+        if (bar) bar.remove();
+      }, 3000);
+    }
+
+    // ===== 导出图片 =====
+    async function exportImage() {
+      const btn = btnExportImage;
+      const orig = btn.textContent;
+      btn.textContent = '⏳ 生成中...';
+      btn.disabled = true;
+
+      try {
+        // 只捕获结果卡片本身，排除操作按钮和 CTA
+        const resultCard = resultSection;
+        // 临时隐藏操作按钮和CTA区域
+        resultActions.style.display = 'none';
+        const ctaDivider = resultSection.querySelector('.cta-divider');
+        const ctaCard = resultSection.querySelector('.cta-card');
+        const resetBtn = resultSection.querySelector('#btn-new-diagnosis').parentElement;
+        const origCtaDisplay = ctaDivider.style.display;
+        const origCtaCardDisplay = ctaCard.style.display;
+        const origResetDisplay = resetBtn.style.display;
+        ctaDivider.style.display = 'none';
+        ctaCard.style.display = 'none';
+        resetBtn.style.display = 'none';
+
+        const canvas = await html2canvas(resultCard, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: false
+        });
+
+        // 恢复
+        resultActions.style.display = 'flex';
+        ctaDivider.style.display = origCtaDisplay;
+        ctaCard.style.display = origCtaCardDisplay;
+        resetBtn.style.display = origResetDisplay;
+
+        // 下载
+        const link = document.createElement('a');
+        link.download = '视频四维诊断_' + new Date().toISOString().slice(0,10) + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (e) {
+        // 出错时确保恢复 UI
+        try {
+          resultActions.style.display = 'flex';
+          const cd = resultSection.querySelector('.cta-divider');
+          const cc = resultSection.querySelector('.cta-card');
+          const rb = resultSection.querySelector('#btn-new-diagnosis');
+          if (cd) cd.style.display = '';
+          if (cc) cc.style.display = '';
+          if (rb) rb.parentElement.style.display = '';
+        } catch (_) {}
+        alert('导出图片失败：' + (e.message || '未知错误。可尝试用浏览器截图工具（Cmd+Shift+4）手动截取。'));
+      }
+
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+
+    // ===== 事件 =====
+    // 格式切换时更新权重提示
+    document.querySelectorAll('input[name="video-format"]').forEach(radio => {
+      radio.addEventListener('change', updateWeightHint);
+    });
+    // 内容类型切换时更新钩子提示
+    document.querySelectorAll('input[name="content-type"]').forEach(radio => {
+      radio.addEventListener('change', updateContentTypeUI);
+    });
+
+    contentInput.addEventListener('input', function() {
+      const len = this.value.length;
+      charCount.textContent = len + ' / 3000';
+      charCount.style.color = len > 2500 ? 'var(--danger)' : 'var(--text-muted)';
+    });
+
+    btnApiAction.addEventListener('click', function() {
+      const key = getApiKey();
+      if (key) {
+        // 已设置 → 切换为输入模式更换
+        if (apiKeyInput.style.display === 'none') {
+          apiKeyInput.style.display = 'inline-block';
+          apiKeyInput.value = key;
+          apiKeyInput.focus();
+          btnApiAction.textContent = '保存';
+          btnApiAction.className = 'btn btn-sm btn-primary';
+        } else {
+          const newKey = apiKeyInput.value.trim();
+          if (!newKey) return;
+          if (!newKey.startsWith('sk-')) { alert('API Key 应以 sk- 开头'); return; }
+          saveApiKey(newKey);
+          updateApiUI();
+        }
+      } else {
+        const newKey = apiKeyInput.value.trim();
+        if (!newKey) { alert('请输入 API Key（免费注册: platform.deepseek.com）'); return; }
+        if (!newKey.startsWith('sk-')) { alert('API Key 应以 sk- 开头'); return; }
+        saveApiKey(newKey);
+        updateApiUI();
+      }
+    });
+
+    btnDiagnose.addEventListener('click', async function() {
+      const content = contentInput.value.trim();
+      if (!content) { alert('请输入要诊断的内容'); return; }
+      if (content.length < MIN_CHARS) {
+        alert('内容太短（至少需要' + MIN_CHARS + '字）。\n\n只给一个标题或一句话，AI 无法判断结构和情绪。\n请把视频的具体脚本、大纲或讲稿放进来。');
+        return;
+      }
+
+      hideError();
+      btnDiagnose.disabled = true;
+      btnDiagnose.textContent = '⏳ 诊断中...';
+
+      const hook = hookInput.value.trim();
+      const url = urlInput.value.trim();
+      const result = await runDiagnosis(content, hook, url);
+
+      btnDiagnose.disabled = false;
+      btnDiagnose.textContent = '🔪 开始诊断';
+      if (result) renderResult(result);
+    });
+
+    // 保存报告 & 导出图片
+    btnSaveReport.addEventListener('click', saveReport);
+    btnExportImage.addEventListener('click', exportImage);
+
+    // 重新诊断
+    $('#btn-new-diagnosis').addEventListener('click', function() {
+      contentInput.value = '';
+      hookInput.value = '';
+      urlInput.value = '';
+      charCount.textContent = '0 / 3000';
+      resultSection.classList.remove('active');
+      resultActions.style.display = 'none';
+      hideError();
+      window.scrollTo({ top:0, behavior:'smooth' });
+      contentInput.focus();
+    });
+
+    // ===== 初始化 =====
+    function init() {
+      updateApiUI();
+      updateContentTypeUI();
+      updateWeightHint();
+      renderHistory();
+      charCount.textContent = '0 / 3000';
+    }
+    init();
+  })();
+  </script>
+</body>
+</html>
