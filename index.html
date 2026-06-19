@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>自媒体选题评价助手</title>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     /* ===== CSS 变量（淡紫色主题） ===== */
     :root {
@@ -602,6 +603,7 @@
       <div class="result-actions">
         <button type="button" class="btn btn-primary" id="btn-save-result">💾 保存到历史</button>
         <button type="button" class="btn btn-secondary" id="btn-copy-report">📋 复制报告</button>
+        <button type="button" class="btn btn-primary" id="btn-export-image">📸 导出图片</button>
         <button type="button" class="btn btn-ghost" id="btn-new-eval">🔄 评下一个</button>
       </div>
     </section>
@@ -1557,6 +1559,42 @@ optimizationTips说明：
       topicInput.value = ''; updateCharCount();
       resultSection.classList.remove('active'); hideError();
       window.scrollTo({ top:0, behavior:'smooth' }); topicInput.focus();
+    });
+
+    // 导出诊断图片
+    $('#btn-export-image').addEventListener('click', async function() {
+      if (!resultSection._currentData) return;
+      const btn = this;
+      const orig = btn.textContent;
+      btn.textContent = '⏳ 生成中...';
+      btn.disabled = true;
+
+      try {
+        // 临时隐藏操作按钮
+        const actions = resultSection.querySelector('.result-actions');
+        const origActionsDisplay = actions.style.display;
+        actions.style.display = 'none';
+
+        const canvas = await html2canvas(resultSection, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          logging: false
+        });
+
+        actions.style.display = origActionsDisplay;
+
+        const link = document.createElement('a');
+        link.download = '选题诊断_' + new Date().toISOString().slice(0,10) + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (e) {
+        const actions = resultSection.querySelector('.result-actions');
+        if (actions) actions.style.display = '';
+        alert('导出失败：' + (e.message || '未知错误'));
+      }
+
+      btn.textContent = orig;
+      btn.disabled = false;
     });
 
     $('#btn-export').addEventListener('click', exportHistory);
