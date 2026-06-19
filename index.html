@@ -419,6 +419,7 @@
       .history-item-right { margin-left: 0; }
     }
   </style>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -602,6 +603,7 @@
       <div class="result-actions">
         <button type="button" class="btn btn-primary" id="btn-save-result">💾 保存到历史</button>
         <button type="button" class="btn btn-secondary" id="btn-copy-report">📋 复制报告</button>
+        <button type="button" class="btn btn-secondary" id="btn-save-image">📸 保存图片</button>
         <button type="button" class="btn btn-ghost" id="btn-new-eval">🔄 评下一个</button>
       </div>
     </section>
@@ -1532,6 +1534,56 @@ optimizationTips说明：
         }, 2000);
       }).catch(function() {
         alert('复制失败，请手动复制');
+      });
+    });
+
+    // 保存图片
+    $('#btn-save-image').addEventListener('click', function() {
+      if (!resultSection._currentData) return;
+      if (typeof html2canvas === 'undefined') { alert('图片功能加载中，请稍后再试'); return; }
+      const btn = this;
+      const origText = btn.textContent;
+      btn.textContent = '⏳ 生成中...';
+      btn.disabled = true;
+
+      // 克隆结果区，修复样式以便截图
+      const resultEl = resultSection;
+      const clone = resultEl.cloneNode(true);
+      clone.style.position = 'fixed';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.width = '720px';
+      clone.style.maxWidth = '720px';
+      clone.style.background = '#ffffff';
+      clone.style.padding = '24px';
+      clone.style.zIndex = '-1';
+      clone.style.display = 'block';
+      clone.classList.add('active');
+      document.body.appendChild(clone);
+
+      html2canvas(clone, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      }).then(function(canvas) {
+        document.body.removeChild(clone);
+        // 下载图片
+        canvas.toBlob(function(blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = '选题诊断_' + new Date().toISOString().slice(0,10) + '.png';
+          a.click();
+          URL.revokeObjectURL(url);
+          btn.textContent = origText;
+          btn.disabled = false;
+        }, 'image/png');
+      }).catch(function(e) {
+        document.body.removeChild(clone);
+        btn.textContent = origText;
+        btn.disabled = false;
+        alert('图片生成失败：' + (e.message || '未知错误'));
       });
     });
 
