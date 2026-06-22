@@ -282,13 +282,19 @@
 
   <main class="main-container">
 
-    <!-- ===== API Key（共享主工具的 Key） ===== -->
-    <div class="api-bar" id="api-bar">
-      <span class="api-status-dot unset" id="api-dot"></span>
-      <span id="api-label" style="font-size:13px;">API Key 未设置</span>
-      <input type="password" id="api-key-input" placeholder="sk-xxxxxxxx（与选题评价助手共用）" autocomplete="off" style="display:none;">
-      <button type="button" class="btn btn-sm btn-secondary" id="btn-api-action">设置 Key</button>
-    </div>
+    <!-- ===== API Key 设置 ===== -->
+    <section class="card" id="api-section">
+      <h2 class="section-title" style="font-size:16px;">🔑 API Key 设置</h2>
+      <p class="section-hint" style="margin-bottom:8px;">需要 DeepSeek API Key（<a href="https://platform.deepseek.com/" target="_blank" style="color:var(--primary);">免费注册获取</a>），Key 只存在你的浏览器里，不上传任何服务器。</p>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <input type="password" id="api-key-input" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-api-action">💾 保存</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-key" style="display:none;">清除</button>
+      </div>
+      <p style="font-size:12px;color:var(--danger);margin-top:4px;" id="api-status">⚠ 尚未设置 API Key</p>
+    </section>
 
     <!-- ===== 输入卡片 ===== -->
     <section class="card">
@@ -397,10 +403,10 @@
     const $ = (sel) => document.querySelector(sel);
 
     // ===== DOM 引用 =====
-    const apiDot = $('#api-dot');
-    const apiLabel = $('#api-label');
     const apiKeyInput = $('#api-key-input');
     const btnApiAction = $('#btn-api-action');
+    const btnClearKey = $('#btn-clear-key');
+    const apiStatus = $('#api-status');
     const contentInput = $('#content-input');
     const hookInput = $('#hook-input');
     const urlInput = $('#url-input');
@@ -521,21 +527,22 @@
     // ===== API Key 管理（共享主工具的 Key） =====
     function getApiKey() { return localStorage.getItem('deepseek-api-key') || ''; }
     function saveApiKey(key) { localStorage.setItem('deepseek-api-key', key.trim()); }
+    function clearApiKey() { localStorage.removeItem('deepseek-api-key'); }
     function updateApiUI() {
       const key = getApiKey();
       if (key) {
-        apiDot.className = 'api-status-dot set';
-        apiLabel.textContent = '✅ Key 已就绪';
-        apiKeyInput.style.display = 'none';
-        btnApiAction.textContent = '更换';
-        btnApiAction.className = 'btn btn-sm btn-ghost';
+        apiKeyInput.value = key;
+        apiStatus.textContent = '✅ API Key 已设置';
+        apiStatus.style.color = 'var(--success)';
+        btnApiAction.textContent = '💾 保存';
+        btnClearKey.style.display = 'inline-block';
         btnDiagnose.disabled = false;
       } else {
-        apiDot.className = 'api-status-dot unset';
-        apiLabel.textContent = '需要 API Key 才能诊断';
-        apiKeyInput.style.display = 'inline-block';
-        btnApiAction.textContent = '保存 Key';
-        btnApiAction.className = 'btn btn-sm btn-primary';
+        apiKeyInput.value = '';
+        apiStatus.textContent = '⚠ 尚未设置 API Key（免费注册: platform.deepseek.com）';
+        apiStatus.style.color = 'var(--danger)';
+        btnApiAction.textContent = '💾 保存';
+        btnClearKey.style.display = 'none';
         btnDiagnose.disabled = true;
       }
     }
@@ -947,29 +954,15 @@ ${rule}
     });
 
     btnApiAction.addEventListener('click', function() {
-      const key = getApiKey();
-      if (key) {
-        // 已设置 → 切换为输入模式更换
-        if (apiKeyInput.style.display === 'none') {
-          apiKeyInput.style.display = 'inline-block';
-          apiKeyInput.value = key;
-          apiKeyInput.focus();
-          btnApiAction.textContent = '保存';
-          btnApiAction.className = 'btn btn-sm btn-primary';
-        } else {
-          const newKey = apiKeyInput.value.trim();
-          if (!newKey) return;
-          if (!newKey.startsWith('sk-')) { alert('API Key 应以 sk- 开头'); return; }
-          saveApiKey(newKey);
-          updateApiUI();
-        }
-      } else {
-        const newKey = apiKeyInput.value.trim();
-        if (!newKey) { alert('请输入 API Key（免费注册: platform.deepseek.com）'); return; }
-        if (!newKey.startsWith('sk-')) { alert('API Key 应以 sk- 开头'); return; }
-        saveApiKey(newKey);
-        updateApiUI();
-      }
+      const newKey = apiKeyInput.value.trim();
+      if (!newKey) { alert('请输入 API Key（免费注册: platform.deepseek.com）'); return; }
+      if (!newKey.startsWith('sk-')) { alert('API Key 格式不正确，应以 sk- 开头'); return; }
+      saveApiKey(newKey);
+      updateApiUI();
+    });
+    btnClearKey.addEventListener('click', function() {
+      clearApiKey();
+      updateApiUI();
     });
 
     btnDiagnose.addEventListener('click', async function() {
